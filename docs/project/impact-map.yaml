@@ -1,0 +1,58 @@
+# 关系图谱：改动文件 → 须同 PR 更新的文档（漏改门禁）
+# 门禁防漏改，不防语义写错；语义一致性靠 agent 自查 + 人工验收。
+status_target: docs/project/status.md
+
+exempt_coverage:
+  - LICENSE
+  - NOTICE
+  - README.md
+  - AGENTS.md
+  - SECURITY.md
+  - .gitignore
+  - .gitleaks.toml
+  - commitlint.config.cjs
+  - eslint.config.mjs
+  - package.json
+  - package-lock.json
+  - versions.lock
+  - history/**
+  - docs/project/impact-map.yaml
+  - docs/project/gates.md
+  - docs/project/conventions.md
+  - docs/project/status.md
+  - docs/project/roadmap.md
+  - scripts/docs-gate/**
+
+rules:
+  - glob: src/**
+    docs: [docs/project/architecture.md, docs/api.md]
+    wiki: [wiki/user/api.md]
+    status: true
+  - glob: test/**
+    docs: []
+    wiki: []
+    status: true
+  - glob: Containerfile
+    docs: [docs/project/architecture.md]
+    wiki: [wiki/deploy/quickstart.md]
+    status: true
+  - glob: deploy/**
+    docs: [docs/project/architecture.md]
+    wiki: [wiki/deploy/quickstart.md]
+    status: true
+  - glob: scripts/**
+    docs: [docs/project/gates.md]
+    wiki: []
+    status: true
+  - glob: .github/workflows/**
+    docs: [docs/project/gates.md]
+    wiki: []
+    status: true
+  - glob: docs/**
+    docs: []
+    wiki: []
+    status: false
+  - glob: wiki/**
+    docs: []
+    wiki: []
+    status: false
