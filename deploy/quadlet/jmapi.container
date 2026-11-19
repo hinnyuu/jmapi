@@ -13,7 +13,7 @@ EnvironmentFile=%h/.config/jmapi/env
 # 双栈：两条 PublishPort（IPv4+IPv6），勿合并为一条（godoword 历史回归教训）
 PublishPort=8080:8080
 PublishPort=[::]:8080:8080
-PublishPort=127.0.0.1:8081:8081
+# admin 8081 只绑容器 loopback，不 publish；宿主访问用 podman exec（见 quickstart）
 Volume=%h/jmapi-data/config:/config:ro,Z
 Volume=%h/jmapi-data/state:/state:Z
 Volume=%h/jmapi-data/output:/output:Z

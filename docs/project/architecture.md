@@ -13,7 +13,8 @@ fetch.mjs        cache-first：缓存 inner-sha 复验命中 → 零网络；否
                  --no-modify-path、遥测关）→ meta.json{version,innerSha,url}；
                  离线：JMAPI_CLI_INSTALLER_FILE / JMAPI_CLI_PACKAGE_FILE bind；
                  钉版：JMAPI_CLI_PACKAGE_URL + JMAPI_CLI_SHA256；刷新：JMAPI_CLI_REFRESH=1
-server.mjs       node:http；8080 业务 + 8081 admin（默认 127.0.0.1）；
+server.mjs       node:http；8080 业务 + 8081 admin（容器内 loopback，不 publish，
+                 宿主经 podman exec 访问；LAN 直连须 JMAPI_ADMIN_BIND opt-in）；
                  healthz 恒 200；readyz fetch 就绪前 503；Bearer fail-closed 401；
                  未实现端点 501；SIGTERM 优雅退出；日志 JSON 脱敏
 cli.mjs          spawn 缓存二进制 -j；解析 {status,data,error,context} 信封；

@@ -10,7 +10,8 @@
 ## 安全默认值（fail-closed）
 
 1. 无 `JMAPI_API_KEY` 拒绝启动；key 建议 `openssl rand -hex 32`；常数时间比较。
-2. admin :8081 默认 loopback；Caddy 只反代 /v1、/api、/files。
+2. admin :8081 只绑**容器内** loopback 且不 publish（宿主经 podman exec 访问）；
+   LAN 直连须显式 JMAPI_ADMIN_BIND opt-in 并自限来源；Caddy 只反代 /v1、/api、/files。
 3. per-key 限流 + 全局并发闸 + 请求体上限（429/413 标准信封）。
 4. 积分帽默认 500/天（UTC 日界，仅拦新提交）；config/env 可改；0=关闭须启动警告。
 5. 产物 URL HMAC 签名短期有效（默认 1h）；过期 403。

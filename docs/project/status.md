@@ -2,40 +2,40 @@
 
 > 每完成有意义步骤更新；收工前确认反映现实。环境事实见 devenv.md（gitignored）。
 
-- updated: 2026-11-19T19:30+08:00
+- updated: 2026-11-19T20:05+08:00
 
 ## 当前里程碑
 
-M0 脚手架（见 [roadmap](roadmap.md)）。
+M0 脚手架（见 [roadmap](roadmap.md)）。PR #1 开放，CI 进行中。
 
 ## done
 
 - 六轮设计讨论定案（history 2026-11-19 各条）：API 双面一等公民、实测锚点、
   纪律/podman 策略、MIT+运行时 fetch、存储三分+自适应降权、godoword 约定借鉴+许可防火墙。
-- 即梦 CLI 全类型实测（图/视频/音频/文本/并发/幂等/错误信封），fixture 素材在临时目录待脱敏搬运。
-- public 仓库 hinnyuu/jmapi 建立（bootstrap commit ece64fe）；MIT/LICENSE/NOTICE/.gitignore/README。
-- 铁律文档体系：AGENTS/conventions/gates/impact-map 落地。
+- 即梦 CLI 全类型实测（图/视频/音频/文本/并发/幂等/错误信封），fixture 已脱敏入仓。
+- public 仓库 hinnyuu/jmapi 建立；MIT/LICENSE/NOTICE/.gitignore/README。
+- 铁律文档体系 + clean-room docs-gate（11 回归）/smoke/清理脚本 + CI 六 job + release。
+- M0 入口（降权/config/cache-first fetch/healthz/readyz/fail-closed）+ 26 单元契约测试全绿。
+- PR #1 创建（GitHub 间歇超时经有界重试成功）；admin 死端口缺陷修正（history 2005）。
 
 ## in-flight
 
-- M0：docs-gate 与 smoke.sh 由子 agent clean-room 实现中；主 agent 写 src/Containerfile/CI/deploy。
-- fixture 脱敏搬运（temp/jimeng-test → test/fixtures），完成后 temp 目录退役。
+- CI 六 job（watch 后台监听）；绿后本机 dev rootless 对 pr-1 镜像跑 smoke。
+- versions.lock baseDigest 待首 CI 回填。
 
 ## 下一动作
 
-1. src 入口（降权/config/fetch/server）+ 单元/契约测试。
-2. Containerfile + versions.lock + workflows + deploy 产物。
-3. 本地 gate/test 预检 → M0 PR → CI 全绿 → 本机 dev rootless smoke（ghcr pr 镜像）。
-4. 人工残留清单（SELinux/quadlet/公网 Caddy）→ 呼叫用户 approve+merge。
+1. CI 全绿确认 → 本机 smoke → 汇总请用户残留 sign-off + approve merge。
+2. baseDigest 回填 commit。
+3. M1 OpenAI 面核心（models/images/videos/文件签名/积分帽执行）。
 
 ## blocked / 待拍板决策
 
 - 无待拍板项（全部已定案，见 history）。
-- 外部依赖：uhub 内网镜像 `uhub.service.ucloud.cn/hinnyuu/node:22-slim` 待主开发者添加
-  （仅本机自建镜像需要；CI 与 ghcr 拉取不受阻）。
-- member 权限若无法设置分支保护/secret scanning → 呼叫用户（尚未尝试）。
+- 等用户确认：temp 阵地（含 live 测试凭据）退役删除；uhub 添加 node:22-slim；
+  分支保护 + secret scanning 设置（member 权限不足时管理员操作）。
 
 ## 近期上下文
 
-- 实测账号积分充足（测试共耗 38）；live 凭据当前在临时目录隔离 home，M0 后迁入挂载卷并退役临时目录。
-- 本机 podman 4.3.1 无 quadlet；dev 默认存储 vfs（历史固化），测试用专用 overlay 存储或 CI 镜像。
+- api.github.com 间歇 TLS 超时：gh 操作有界重试纪律生效中；push 走 SSH 不受影响。
+- 本机 podman 4.3.1 无 quadlet；dev 默认存储 vfs（历史固化），smoke 用 ghcr pr 镜像。

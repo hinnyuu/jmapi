@@ -60,6 +60,7 @@ test('认证与就绪门禁顺序：无 key 401 → 有 key 未就绪 503 → �
     assert.equal((await fetch(base + '/v1/models', { headers: { Authorization: 'Bearer test-key' } })).status, 501);
     assert.equal((await fetch(base + '/v1/models', { headers: { Authorization: 'Bearer wrong' } })).status, 401);
     assert.equal((await fetch(base + '/nope')).status, 404);
+    assert.equal((await fetch(base + '/admin/status')).status, 404);
   });
 });
 

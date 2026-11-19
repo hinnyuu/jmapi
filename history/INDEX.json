@@ -121,5 +121,25 @@
     "supersedes": [],
     "superseded_by": [],
     "pr": ""
+  },
+  {
+    "file": "2026-11-19-2005-admin-loopback-publish-fix.md",
+    "title": "admin 面可达性缺陷修正：容器 loopback 不 publish",
+    "date": "2026-11-19T20:05:00+08:00",
+    "keywords": [
+      "admin",
+      "loopback",
+      "publish",
+      "port",
+      "defect"
+    ],
+    "scope": [
+      "project"
+    ],
+    "type": "change",
+    "status": "accepted",
+    "supersedes": [],
+    "superseded_by": [],
+    "pr": "1"
   }
 ]

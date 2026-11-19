@@ -14,7 +14,7 @@ export JMAPI_API_KEY="$(openssl rand -hex 32)"   # 妥善保存；泄漏=积分�
 
 ```bash
 podman run -d --name jmapi \
-  -p 8080:8080 -p 127.0.0.1:8081:8081 \
+  -p 8080:8080 \
   -e JMAPI_API_KEY="$JMAPI_API_KEY" \
   -e JMAPI_CLI_SOURCE="https://jimeng.jianying.com/novel-cli" \
   -v ./jmapi-data/config:/config:ro,Z \
@@ -41,7 +41,14 @@ podman exec -it jmapi /state/cli/bin/jimeng-novel login --non-interactive -j
 podman exec -it jmapi /state/cli/bin/jimeng-novel login --wait --device-code '<deviceCode>' --timeout 600s -j
 ```
 
-M2 起 admin 面（loopback/LAN）提供等价端点。token 自动续期，长任务不必提前处理。
+M2 起 admin 面提供等价端点。admin 只绑**容器内** loopback（不 publish），宿主访问：
+
+```bash
+podman exec jmapi curl -s http://127.0.0.1:8081/admin/status
+```
+
+确需 LAN 直连 admin 时显式 opt-in：`-e JMAPI_ADMIN_BIND=0.0.0.0` 并自行以防火墙/ publish
+绑定限制来源（自担风险；公网反代绝不代理 admin）。token 自动续期，长任务不必提前处理。
 
 ## rootful / docker 回退
 
