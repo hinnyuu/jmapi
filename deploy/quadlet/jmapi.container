@@ -1,0 +1,29 @@
+# Quadlet 用户单元（podman≥4.4；本机 4.3.x 不支持，见 wiki/deploy/quickstart.md）
+# 安装：cp 到 ~/.config/containers/systemd/，systemctl --user daemon-reload && systemctl --user start jmapi
+# 前置：loginctl enable-linger $USER；JMAPI_API_KEY 经 env 文件注入（不入库）。
+[Unit]
+Description=jmapi — 即梦 CLI 的 OpenAI/DashScope 兼容 API
+Wants=network-online.target
+After=network-online.target
+
+[Container]
+Image=ghcr.io/hinnyuu/jmapi:latest
+ContainerName=jmapi
+EnvironmentFile=%h/.config/jmapi/env
+# 双栈：两条 PublishPort（IPv4+IPv6），勿合并为一条（godoword 历史回归教训）
+PublishPort=8080:8080
+PublishPort=[::]:8080:8080
+PublishPort=127.0.0.1:8081:8081
+Volume=%h/jmapi-data/config:/config:ro,Z
+Volume=%h/jmapi-data/state:/state:Z
+Volume=%h/jmapi-data/output:/output:Z
+# 自适应降权在 entrypoint 内完成，无需 UserNS=keep-id
+HealthCmd=curl -fsS http://127.0.0.1:8080/healthz
+HealthInterval=30s
+
+[Service]
+Restart=on-failure
+TimeoutStopSec=10
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,21 @@
+# Caddy 反代示例（个人公网使用）：只暴露生成面与签名文件面，admin 不出公网。
+# TLS 自动 HTTPS；服务本体明文端口不暴露 WAN。
+jmapi.example.com {
+	encode zstd gzip
+
+	# 生成面（OpenAI + DashScope）与签名产物 URL
+	@api path /v1/* /api/* /files/*
+	handle @api {
+		reverse_proxy 127.0.0.1:8080
+	}
+
+	# 健康检查可选暴露（无敏感信息）
+	handle /healthz {
+		reverse_proxy 127.0.0.1:8080
+	}
+
+	# 其余一律拒绝（admin 8081 只绑 loopback，本就不应出现在此）
+	handle {
+		respond "not found" 404
+	}
+}

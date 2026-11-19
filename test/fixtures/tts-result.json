@@ -1,0 +1,42 @@
+{
+  "context": {
+    "command": "generate-audio",
+    "projectId": "90000000000001",
+    "teamId": "0"
+  },
+  "data": {
+    "audios": [
+      {
+        "assetId": "92000000000001",
+        "download_url": "https://everphoto-media.jianying.com/origin/7709821895122502169?Expire=1796378815&X-Everphoto-Expires=1796378815&X-Everphoto-Sum=4bb46d0939256caaccab9f5385cf3d0b68920888&X-Everphoto-Token=AAAAAAAAAAAAAAAAAAAAAMFZT-kel4_Tcih56GjEc-wMKMiwnStnWd0uuyqlEUMUWaveZATQb9Yu2IyIwuANuK0RPehsn6EXZGxpr-xYwoU",
+        "name": "测试用户",
+        "output_path": "/output/00000000-0000-4000-8000-0000000001-92000000000001.wav"
+      }
+    ],
+    "canvas": {
+      "nodeId": "91000000000001",
+      "projectId": "90000000000001",
+      "status": "applied"
+    },
+    "completed": true,
+    "credits": {
+      "deducted": 5,
+      "preDeducted": 0,
+      "returned": 0,
+      "settlementStatus": 4
+    },
+    "error_message": "",
+    "images": [],
+    "nodeId": "91000000000001",
+    "projectCreated": true,
+    "projectId": "90000000000001",
+    "run_id": "00000000-0000-4000-8000-0000000001",
+    "status": "succeeded",
+    "team_id": "0",
+    "thread_id": "canvas_thread_93000000000001",
+    "url": "https://jimeng.jianying.com/novel/detail/canvas?projectId=90000000000001",
+    "videos": []
+  },
+  "error": null,
+  "status": "success"
+}
