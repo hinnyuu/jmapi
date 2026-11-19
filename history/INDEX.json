@@ -182,5 +182,25 @@
     "supersedes": [],
     "superseded_by": [],
     "pr": "1"
+  },
+  {
+    "file": "2026-11-19-2055-xdg-env-leak-fix.md",
+    "title": "T6 根因：runuser 环境泄漏 XDG_CONFIG_HOME",
+    "date": "2026-11-19T20:55:00+08:00",
+    "keywords": [
+      "xdg",
+      "runuser",
+      "env-leak",
+      "rootless",
+      "smoke"
+    ],
+    "scope": [
+      "project"
+    ],
+    "type": "change",
+    "status": "accepted",
+    "supersedes": [],
+    "superseded_by": [],
+    "pr": "1"
   }
 ]

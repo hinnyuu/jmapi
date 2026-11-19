@@ -36,7 +36,10 @@ priv() { if [ "$ROOT_EUID" -eq 0 ]; then "$@"; else sudo "$@"; fi; }
 # 注意 runuser 保留调用者 cwd，必须先 cd 到 dev 的 HOME，否则 podman 相对路径/权限踩坑。
 as_podman() {
   if [ "$ROOT_EUID" -eq 0 ] && id dev >/dev/null 2>&1; then
-    ( cd /home/dev && runuser -u dev -- env XDG_RUNTIME_DIR=/run/user/1000 podman "$@" )
+    # XDG 三件套全显式：runuser 保留调用者环境，泄漏的 XDG_CONFIG_HOME 会让 podman 读错属主目录
+    ( cd /home/dev && runuser -u dev -- env HOME=/home/dev \
+        XDG_CONFIG_HOME=/home/dev/.config XDG_DATA_HOME=/home/dev/.local/share \
+        XDG_RUNTIME_DIR=/run/user/1000 podman "$@" )
   else
     podman "$@"
   fi
@@ -307,7 +310,8 @@ if [ "$MATRIX" = "full" ]; then
     priv chmod 700 "/run/user/${ALT_UID}"
     alt_podman() {
       ( cd "$ALT_HOME" && priv runuser -u "$CREATED_USER" -- \
-          env HOME="$ALT_HOME" XDG_RUNTIME_DIR="/run/user/${ALT_UID}" podman "$@" )
+          env HOME="$ALT_HOME" XDG_CONFIG_HOME="$ALT_HOME/.config" \
+          XDG_DATA_HOME="$ALT_HOME/.local/share" XDG_RUNTIME_DIR="/run/user/${ALT_UID}" podman "$@" )
     }
     B6="${BIND_ROOT}/t6"
     prepare_bind "$B6" "$ALT_UID"
