@@ -20,7 +20,7 @@ CI 与本地预检聚合校验；新文件未登记 → 红（防图谱腐烂）
 4. **node**：eslint、`node --test`（单元+契约）、`npm audit --audit-level=high`、
    依赖许可证白名单脚本（MIT/Apache-2.0/BSD/ISC/PSF 等，其余个案审）。
 5. **构建推送**：buildx 构建 `Containerfile`，推 `ghcr.io/hinnyuu/jmapi:pr-N` 与 `sha-xxxx`；
-   基础镜像 digest 与 versions.lock 比对（lock 非空时），不符即红。
+   基础镜像 digest 由 `docker manifest inspect` 解析 docker.io 并与 versions.lock 比对，不符即红。
 6. **容器冒烟**：`scripts/acceptance/smoke.sh`，podman rootless
    （ubuntu 24.04 须 `sysctl kernel.apparmor_restrict_unprivileged_userns=0`，仅 CI 临时环境）；
    覆盖 healthz/readyz、401/501、config ro、bind 属主、uid/卷矩阵、删容器重建缓存命中、优雅退出；

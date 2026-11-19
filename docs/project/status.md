@@ -26,8 +26,8 @@ M0 脚手架（见 [roadmap](roadmap.md)）。PR #1 开放，CI 进行中。
 
 ## in-flight
 
-- CI 第六轮（watch 后台监听）；绿后本机 dev rootless 对 pr-1 镜像跑 smoke。
-- versions.lock baseDigest 待 CI 回填。
+- CI 第六轮（watch 后台监听）；**本机 dev rootless smoke 子集 14/14 全绿**（pr-1 镜像）。
+- versions.lock baseDigest 已回填（uhub 镜像 digest）；CI 比对语义修正为解析基础镜像 digest。
 
 ## 下一动作
 

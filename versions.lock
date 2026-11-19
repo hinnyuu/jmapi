@@ -1,7 +1,7 @@
 {
   "baseImage": "docker.io/library/node:22-slim",
-  "baseDigest": "",
-  "baseDigestNote": "首次 CI 构建后回填 pulled digest；非空时 CI 比对不符即红",
+  "baseDigest": "sha256:47725aca53d3295ec2d3be8f62726599b3033cc262edc2c7e429909b3ac599fc",
+  "baseDigestNote": "基础镜像 index digest（uhub 忠实镜像取值，CI 以 docker manifest inspect 解析 docker.io 比对）",
   "cliInstallerUrl": "https://jimeng.jianying.com/novel-cli",
   "cliPackageUrl": "https://lf3-static.bytednsdoc.com/obj/eden-cn/psj_slcvu_hupthlyk/ljhwZthlaukjlkulzlp/jimeng-novel/versions/1.0.9/scm-317/general/package.tar.gz",
   "cliVersion": "1.0.9",

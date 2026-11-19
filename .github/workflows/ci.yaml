@@ -95,13 +95,14 @@ jobs:
           cache-to: type=gha,mode=max
       - name: 基础镜像 digest 与 versions.lock 比对
         env:
-          DIGEST: ${{ steps.build.outputs.digest }}
+          BASE_IMAGE: docker.io/library/node:22-slim
         run: |
+          BASE_DIGEST=$(docker manifest inspect "$BASE_IMAGE" --verbose | jq -r 'if type=="array" then .[0].Descriptor.digest else .Descriptor.digest end')
           LOCK=$(python3 -c "import json;print(json.load(open('versions.lock'))['baseDigest'])")
-          if [ -n "$LOCK" ] && [ "$LOCK" != "$DIGEST" ]; then
-            echo "基础镜像 digest 漂移：lock=$LOCK pulled=$DIGEST（升级须显式 commit 更新 versions.lock）"; exit 1
+          echo "base digest: $BASE_DIGEST (lock: ${LOCK:-empty})"
+          if [ -n "$LOCK" ] && [ "$LOCK" != "$BASE_DIGEST" ]; then
+            echo "基础镜像 digest 漂移：lock=$LOCK resolved=$BASE_DIGEST（升级须显式 commit 更新 versions.lock）"; exit 1
           fi
-          echo "pulled digest: $DIGEST（lock 为空时首 CI 回填）"
 
   smoke:
     runs-on: ubuntu-latest
