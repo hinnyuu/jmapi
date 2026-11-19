@@ -7,18 +7,12 @@ export function parseIdMap(text) {
   });
 }
 
-export function mapHostToContainer(map, hostId) {
-  for (const r of map) {
-    if (hostId >= r.outside && hostId < r.outside + r.count) return r.inside + (hostId - r.outside);
-  }
-  return null;
-}
-
 function isIdentity(map) {
   return map.length === 1 && map[0].inside === 0 && map[0].outside === 0;
 }
 
-// 目标 uid/gid：bind 属主映射回容器内身份，使容器产出文件在宿主上仍归 bind 属主。
+// stat 拿到的是**容器侧** uid：rootless 下它已是映射结果，直接以其为目标降权，
+// 容器产出文件在宿主上即归 bind 属主；uid_map 只用于区分 rootful 与识别溢出属主。
 export function computeDemotion({ stateDir, euid, uidMap, gidMap, puid = null, pgid = null }) {
   if (euid !== 0) return null;
   const st = fs.statSync(stateDir);
@@ -27,14 +21,12 @@ export function computeDemotion({ stateDir, euid, uidMap, gidMap, puid = null, p
     if (st.uid === 0) return { uid: 1000, gid: 1000, chown: true };
     return { uid: st.uid, gid: st.gid, chown: false };
   }
-  const uid = mapHostToContainer(uidMap, st.uid);
-  const gid = mapHostToContainer(gidMap, st.gid);
-  if (uid === null || gid === null) {
-    const err = new Error(`state 目录属主 uid=${st.uid} gid=${st.gid} 不在 userns 映射内；检查 bind 属主或 SELinux 标签（:Z）`);
+  if (st.uid === 65534 || st.gid === 65534) {
+    const err = new Error('state 目录属主为溢出 uid/gid 65534（宿主 root 属主 bind 在 rootless 下无映射）；改 bind 属主为运行用户或检查 SELinux 标签（:Z）');
     err.code = 'EACCES';
     throw err;
   }
-  return { uid, gid, chown: false };
+  return { uid: st.uid, gid: st.gid, chown: false };
 }
 
 export function chownRecursive(dir, uid, gid) {

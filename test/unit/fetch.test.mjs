@@ -47,11 +47,12 @@ test('cache-first：无缓存不命中；meta+包+release 齐备且 sha 一致�
   fs.mkdirSync(path.join(state, 'cli'), { recursive: true });
   fs.copyFileSync(outer, path.join(state, 'cli', 'package.tar.gz'));
   const bundle = 'jimeng-novel-9.9.9-linux-amd64';
-  fs.mkdirSync(path.join(state, 'cli', 'app', 'releases', bundle), { recursive: true });
-  fs.writeFileSync(path.join(state, 'cli', 'app', 'releases', bundle, 'jimeng-novel'), 'x');
-  fs.writeFileSync(path.join(state, 'cli', 'meta.json'), JSON.stringify({ bundle, innerSha: sha, version: '9.9.9' }));
+  const release = `${bundle}-abcdef012345`;
+  fs.mkdirSync(path.join(state, 'cli', 'app', 'releases', release), { recursive: true });
+  fs.writeFileSync(path.join(state, 'cli', 'app', 'releases', release, 'jimeng-novel'), 'x');
+  fs.writeFileSync(path.join(state, 'cli', 'meta.json'), JSON.stringify({ bundle, release, innerSha: sha, version: '9.9.9' }));
   assert.equal(f.cacheHit(), true);
-  fs.writeFileSync(path.join(state, 'cli', 'meta.json'), JSON.stringify({ bundle, innerSha: 'f'.repeat(64), version: '9.9.9' }));
+  fs.writeFileSync(path.join(state, 'cli', 'meta.json'), JSON.stringify({ bundle, release, innerSha: 'f'.repeat(64), version: '9.9.9' }));
   assert.equal(f.cacheHit(), false);
   fs.rmSync(dir, { recursive: true, force: true });
 });

@@ -17,11 +17,15 @@ M0 脚手架（见 [roadmap](roadmap.md)）。PR #1 开放，CI 进行中。
 - 铁律文档体系 + clean-room docs-gate（11 回归）/smoke/清理脚本 + CI 六 job + release。
 - M0 入口（降权/config/cache-first fetch/healthz/readyz/fail-closed）+ 26 单元契约测试全绿。
 - PR #1 创建（GitHub 间歇超时经有界重试成功）；admin 死端口缺陷修正（history 2005）。
+- 二轮 CI 抓降权二次映射缺陷 + 本机预验抓 release 目录 sha12 后缀缺陷，均修复（history 2030）；
+  本机全链路预验：首启 8s readyz 200、二启 cache hit 4s 200。
+- 仓库设置落地：分支保护（6 checks+1 approve+enforce_admins）、squash-only、secret scanning+push protection。
+- uhub node:22-slim 已添加并 pull 验证；temp 阵地已退役（用户确认，仅删自有两目录）。
 
 ## in-flight
 
-- CI 六 job（watch 后台监听）；绿后本机 dev rootless 对 pr-1 镜像跑 smoke。
-- versions.lock baseDigest 待首 CI 回填。
+- CI 第三轮（watch 后台监听）；绿后本机 dev rootless 对 pr-1 镜像跑 smoke。
+- versions.lock baseDigest 待 CI 回填。
 
 ## 下一动作
 
@@ -31,9 +35,8 @@ M0 脚手架（见 [roadmap](roadmap.md)）。PR #1 开放，CI 进行中。
 
 ## blocked / 待拍板决策
 
-- 无待拍板项（全部已定案，见 history）。
-- 等用户确认：temp 阵地（含 live 测试凭据）退役删除；uhub 添加 node:22-slim；
-  分支保护 + secret scanning 设置（member 权限不足时管理员操作）。
+- 无待拍板项（全部已定案，见 history）；用户确认项均已落地（temp 退役/uhub/仓库设置）。
+- 待人工：PR 残留清单 sign-off（SELinux/Quadlet/公网 Caddy）+ approve merge。
 
 ## 近期上下文
 

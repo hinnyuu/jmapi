@@ -4,8 +4,10 @@
 
 ```
 entrypoint.mjs   容器入口：建目录 → 自适应降权 → 载配置 → 起 HTTP → 后台 fetch
-demote.mjs       stat /state 属主 + /proc/self/uid_map/gid_map → 映射容器 uid；
-                 setgroups→setgid→setuid；rootful+root 属主 → chown 1000 再降；PUID/PGID 覆盖
+demote.mjs       stat /state 属主（**容器侧 uid**，rootless 下已是映射结果）→ 直接以其为
+                 降权目标（setgroups→setgid→setuid）；uid_map 仅区分 rootful/rootless
+                 与识别溢出属主 65534（宿主 root bind 无映射 → EACCES 提示）；
+                 rootful+root 属主 → chown 1000 再降；PUID/PGID 覆盖
 config.mjs       config.toml（smol-toml）+ env 覆盖（env 优先）+ SIGHUP 热重载非秘密项
 fetch.mjs        cache-first：缓存 inner-sha 复验命中 → 零网络；否则 curl 官方安装器 →
                  取 DEFAULT_PACKAGE_URL → 下载 package.tar.gz 存缓存 → 官方安装器

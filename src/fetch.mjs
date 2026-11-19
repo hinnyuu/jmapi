@@ -58,7 +58,7 @@ export class CliFetcher {
   cacheHit() {
     if (!fs.existsSync(this.metaPath) || !fs.existsSync(this.outerPath)) return false;
     const meta = JSON.parse(fs.readFileSync(this.metaPath, 'utf8'));
-    if (!fs.existsSync(path.join(this.dir, 'app', 'releases', meta.bundle, 'jimeng-novel'))) return false;
+    if (!meta.release || !fs.existsSync(path.join(this.dir, 'app', 'releases', meta.release, 'jimeng-novel'))) return false;
     const inner = readInnerFromOuter(this.outerPath);
     if (inner.sha !== meta.innerSha) return false;
     this.meta = meta;
@@ -98,10 +98,13 @@ export class CliFetcher {
         '--prefix', path.join(this.dir, 'app'), '--bin-dir', path.join(this.dir, 'bin'),
         '--skills-dir', path.join(this.dir, 'skills'), '--no-modify-path'],
       { stdio: 'inherit', env: { ...this.env, JIMENG_NOVEL_DISABLE_TELEMETRY: '1', METRICS_LOG_LEVEL: 'none' }, timeout: 300000 });
-      if (!fs.existsSync(path.join(this.dir, 'app', 'releases', bundle, 'jimeng-novel'))) {
+      // 安装器 release 目录名带 sha12 后缀（<bundle>-<sha12>），以实际目录名入 meta
+      const relRoot = path.join(this.dir, 'app', 'releases');
+      const release = fs.existsSync(relRoot) ? fs.readdirSync(relRoot).find((n) => n.startsWith(`${bundle}-`)) : null;
+      if (!release || !fs.existsSync(path.join(relRoot, release, 'jimeng-novel'))) {
         throw new Error('官方安装器未产出预期 release 目录');
       }
-      this.meta = { version: bundle.match(INNER_RE)?.[1] ?? 'unknown', bundle, innerSha: inner.sha, fetchedAt: new Date().toISOString() };
+      this.meta = { version: bundle.match(INNER_RE)?.[1] ?? 'unknown', bundle, release, innerSha: inner.sha, fetchedAt: new Date().toISOString() };
       fs.writeFileSync(this.metaPath, JSON.stringify(this.meta, null, 2));
       this.log('fetch done', { version: this.meta.version });
       this.state = { status: 'ready', message: null };

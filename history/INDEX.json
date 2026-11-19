@@ -141,5 +141,25 @@
     "supersedes": [],
     "superseded_by": [],
     "pr": "1"
+  },
+  {
+    "file": "2026-11-19-2030-demotion-container-side-uid-fix.md",
+    "title": "降权映射缺陷修正：容器侧属主即目标，不做二次映射",
+    "date": "2026-11-19T20:30:00+08:00",
+    "keywords": [
+      "demotion",
+      "uid-map",
+      "rootless",
+      "overflow",
+      "smoke-diagnostics"
+    ],
+    "scope": [
+      "project"
+    ],
+    "type": "change",
+    "status": "accepted",
+    "supersedes": [],
+    "superseded_by": [],
+    "pr": "1"
   }
 ]

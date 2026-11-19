@@ -125,6 +125,12 @@ start_container() {
 cleanup() {
   echo "== 清理自有资源（仅前缀 ${TAG}）=="
   local ids vols
+  # 失败时先 dump 自有容器日志再清理（诊断纪律：红必留现场摘要）
+  if [ "$FAIL" -gt 0 ]; then
+    for c in $(as_podman ps -aq --filter "name=^${TAG}" 2>/dev/null); do
+      echo "-- logs $c --"; as_podman logs --tail 25 "$c" 2>&1 | tail -25
+    done
+  fi
   # rootless 侧（dev 或当前用户）
   ids="$(as_podman ps -aq --filter "name=^${TAG}" 2>/dev/null)"
   # shellcheck disable=SC2086
