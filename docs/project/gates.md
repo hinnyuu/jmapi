@@ -11,8 +11,8 @@ CI 与本地预检聚合校验；新文件未登记 → 红（防图谱腐烂）
 ## CI 检查清单
 
 1. **commitlint**：PR 标题与 commits 符合 conventional（type/scope 英文，subject 中文，header≤100）。
-2. **gitleaks**：钉版本下载 + **checksums 校验后才执行**；全历史扫描；豁免收窄为占位符与
-   CI 测试凭据 regex（见 .gitleaks.toml），保留 docs/wiki/history 扫描。
+2. **gitleaks**：钉版本下载（**保留原文件名**以供 checksums 行校验）+ **checksums 校验后才执行**；
+   全历史扫描；豁免收窄为占位符与 CI 测试凭据 regex（见 .gitleaks.toml），保留 docs/wiki/history 扫描。
 3. **docs-gate**：覆盖率（每个变更文件命中 impact-map 或豁免）、漏改（命中规则的 docs/wiki
    须同 PR 更新，`docs-nochange` 标签+评论豁免留痕）、链接+锚点、中文门禁、禁入路径
    （devenv.md/`*.key`/`*.pem`/`.env*`/`*token*.json`/secrets/）、status 新鲜度、
