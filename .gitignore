@@ -1,0 +1,33 @@
+# 本机环境文档：严禁提交（含 git add -f）
+devenv.md
+
+# 依赖与构建产物
+node_modules/
+dist/
+*.tsbuildinfo
+
+# 凭据与秘密：任何形态都不入库
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*token*.json
+*credential*
+secrets/
+
+# 运行时状态（凭据/任务表/CLI 缓存/产物）只存在于挂载卷
+state/
+output/
+.jimeng/
+
+# 测试临时资源
+/tmp/
+.smoke/
+*.log
+
+# 编辑器与系统
+.DS_Store
+*.swp
+.idea/
+.vscode/
