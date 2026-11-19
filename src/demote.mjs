@@ -13,7 +13,7 @@ function isIdentity(map) {
 
 // stat 拿到的是**容器侧** uid：rootless 下它已是映射结果，直接以其为目标降权，
 // 容器产出文件在宿主上即归 bind 属主；uid_map 只用于区分 rootful 与识别溢出属主。
-export function computeDemotion({ stateDir, euid, uidMap, gidMap, puid = null, pgid = null }) {
+export function computeDemotion({ stateDir, euid, uidMap, puid = null, pgid = null }) {
   if (euid !== 0) return null;
   const st = fs.statSync(stateDir);
   if (puid !== null) return { uid: puid, gid: pgid ?? st.gid, chown: false };

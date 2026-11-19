@@ -25,7 +25,6 @@ if (process.getuid && process.getuid() === 0) {
       stateDir,
       euid: 0,
       uidMap: parseIdMap(fs.readFileSync('/proc/self/uid_map', 'utf8')),
-      gidMap: parseIdMap(fs.readFileSync('/proc/self/gid_map', 'utf8')),
       puid: process.env.PUID ? Number(process.env.PUID) : null,
       pgid: process.env.PGID ? Number(process.env.PGID) : null,
     });
