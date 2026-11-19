@@ -2,11 +2,13 @@
 
 > 每完成有意义步骤更新；收工前确认反映现实。环境事实见 devenv.md（gitignored）。
 
-- updated: 2026-11-19T20:05+08:00
+- updated: 2026-11-19T21:10+08:00
 
 ## 当前里程碑
 
-M0 脚手架（见 [roadmap](roadmap.md)）。PR #1 开放，CI 进行中。
+M0 脚手架 **merge 就绪**：七轮 CI 全绿（full 矩阵 smoke + baseDigest 比对通过，
+uhub 镜像与 docker.io digest 一致）；本机 dev rootless smoke 14/14；
+PR #1 mergeable，BLOCKED 仅待人工 approve（分支保护设计如此）。
 
 ## done
 
@@ -26,8 +28,8 @@ M0 脚手架（见 [roadmap](roadmap.md)）。PR #1 开放，CI 进行中。
 
 ## in-flight
 
-- CI 第六轮（watch 后台监听）；**本机 dev rootless smoke 子集 14/14 全绿**（pr-1 镜像）。
-- versions.lock baseDigest 已回填（uhub 镜像 digest）；CI 比对语义修正为解析基础镜像 digest。
+- CI 第八轮（status 收敛 commit 触发，watch 监听）；绿后请用户 approve+merge。
+- merge 后：release 对 main 镜像重跑冒烟（same-tree）；M1 开工。
 
 ## 下一动作
 
