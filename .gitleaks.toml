@@ -1,0 +1,13 @@
+title = "jmapi gitleaks 配置"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "CI 冒烟固定测试 key 与文档占位符（非真实凭据）"
+regexes = [
+  '''jmapi-smoke-test-key''',
+  '''sk-REPLACE_ME''',
+  '''your-api-key''',
+  '''<你的 key>''',
+]

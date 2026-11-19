@@ -1,0 +1,125 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: write
+  pull-requests: read
+
+jobs:
+  docs-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pyyaml
+      - name: 关系图谱门禁
+        env:
+          JMAPI_DOCS_NOCHANGE: ${{ contains(github.event.pull_request.labels.*.name, 'docs-nochange') }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: python3 scripts/docs-gate/gate.py --ci --base "$BASE_SHA"
+      - name: 门禁逻辑回归
+        run: python3 scripts/docs-gate/test_gate.py
+
+  commitlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: wagoid/commitlint-github-action@v6
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: gitleaks 密钥扫描（钉版 + checksums 校验后执行）
+        run: |
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz -o /tmp/gitleaks.tar.gz
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_checksums.txt -o /tmp/gitleaks_checksums.txt
+          grep -F 'gitleaks_8.21.2_linux_x64.tar.gz' /tmp/gitleaks_checksums.txt | (cd /tmp && sha256sum -c -)
+          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
+          /tmp/gitleaks detect --source . --redact --no-banner --exit-code 1 --config .gitleaks.toml
+
+  node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm audit --audit-level=high
+      - name: 依赖许可证白名单
+        run: node scripts/licenses.mjs
+
+  image:
+    runs-on: ubuntu-latest
+    needs: [docs-gate, commitlint, secrets, node]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=pr
+            type=sha,prefix=sha-
+      - uses: docker/build-push-action@v6
+        id: build
+        with:
+          context: .
+          file: Containerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: 基础镜像 digest 与 versions.lock 比对
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          LOCK=$(python3 -c "import json;print(json.load(open('versions.lock'))['baseDigest'])")
+          if [ -n "$LOCK" ] && [ "$LOCK" != "$DIGEST" ]; then
+            echo "基础镜像 digest 漂移：lock=$LOCK pulled=$DIGEST（升级须显式 commit 更新 versions.lock）"; exit 1
+          fi
+          echo "pulled digest: $DIGEST（lock 为空时首 CI 回填）"
+
+  smoke:
+    runs-on: ubuntu-latest
+    needs: [image]
+    steps:
+      - uses: actions/checkout@v4
+      - name: 安装 podman 并配置 rootless 环境
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y podman slirp4netns
+          # ubuntu 24.04 默认限制非特权 userns（AppArmor），放宽以允许 rootless podman（仅 CI 临时环境）
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 2>/dev/null || true
+          podman --version
+      - name: 容器冒烟测试（full 矩阵）
+        env:
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          JMAPI_SMOKE_MATRIX: full
+        run: |
+          case "$PR_NUMBER" in ''|*[!0-9]*) echo "invalid PR_NUMBER"; exit 1;; esac
+          bash scripts/acceptance/smoke.sh "ghcr.io/${REPO}:pr-${PR_NUMBER}"
