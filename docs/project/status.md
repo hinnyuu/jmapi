@@ -19,12 +19,14 @@ M0 脚手架（见 [roadmap](roadmap.md)）。PR #1 开放，CI 进行中。
 - PR #1 创建（GitHub 间歇超时经有界重试成功）；admin 死端口缺陷修正（history 2005）。
 - 二轮 CI 抓降权二次映射缺陷 + 本机预验抓 release 目录 sha12 后缀缺陷，均修复（history 2030）；
   本机全链路预验：首启 8s readyz 200、二启 cache hit 4s 200。
+- 三轮 CI 抓 gidMap 死参数（lint）已移除；四轮 smoke 17 PASS/5 FAIL → 测量缺陷三处修正
+  （healthz 竞态/exec uid 假红/version 正则）+ T6 诊断补强（history 2045）。
 - 仓库设置落地：分支保护（6 checks+1 approve+enforce_admins）、squash-only、secret scanning+push protection。
 - uhub node:22-slim 已添加并 pull 验证；temp 阵地已退役（用户确认，仅删自有两目录）。
 
 ## in-flight
 
-- CI 第三轮（watch 后台监听）；绿后本机 dev rootless 对 pr-1 镜像跑 smoke。
+- CI 第五轮（watch 后台监听）；绿后本机 dev rootless 对 pr-1 镜像跑 smoke。
 - versions.lock baseDigest 待 CI 回填。
 
 ## 下一动作

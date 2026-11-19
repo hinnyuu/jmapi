@@ -12,7 +12,8 @@ config.mjs       config.toml（smol-toml）+ env 覆盖（env 优先）+ SIGHUP 
 fetch.mjs        cache-first：缓存 inner-sha 复验命中 → 零网络；否则 curl 官方安装器 →
                  取 DEFAULT_PACKAGE_URL → 下载 package.tar.gz 存缓存 → 官方安装器
                  --package-file 校验解包（--prefix/--bin-dir/--skills-dir 缓存内、
-                 --no-modify-path、遥测关）→ meta.json{version,innerSha,url}；
+                 --no-modify-path、遥测关）→ meta.json{version(内层包名解析),bundle,
+                 release(带 sha12 后缀的实际目录名),innerSha,fetchedAt}；
                  离线：JMAPI_CLI_INSTALLER_FILE / JMAPI_CLI_PACKAGE_FILE bind；
                  钉版：JMAPI_CLI_PACKAGE_URL + JMAPI_CLI_SHA256；刷新：JMAPI_CLI_REFRESH=1
 server.mjs       node:http；8080 业务 + 8081 admin（容器内 loopback，不 publish，

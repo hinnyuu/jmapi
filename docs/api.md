@@ -11,7 +11,7 @@
 | GET /healthz | 恒 200 `{"status":"ok"}` |
 | GET /readyz | CLI fetch/复验就绪 200，否则 503 `{"status":"fetching"\|"error"}` |
 | /v1/*、/api/* | 无 key 401；有 key 未就绪 503；就绪但未实现 501 |
-| admin :8081（容器 loopback，不 publish） | 宿主经 `podman exec jmapi curl -s http://127.0.0.1:8081/admin/status` 访问；M2 落地 login/refresh/reload；LAN 直连须显式 JMAPI_ADMIN_BIND opt-in |
+| admin :8081（容器 loopback，不 publish） | 宿主经 `podman exec jmapi curl -s http://127.0.0.1:8081/admin/status` 访问；返回 cli 就绪态、version（实际 CLI 版本号）、login 态、积分帽配置；M2 落地 login/refresh/reload；LAN 直连须显式 JMAPI_ADMIN_BIND opt-in |
 
 ## M1 OpenAI 面（计划形状，落地时更新本文件）
 

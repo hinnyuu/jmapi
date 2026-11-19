@@ -104,7 +104,7 @@ export class CliFetcher {
       if (!release || !fs.existsSync(path.join(relRoot, release, 'jimeng-novel'))) {
         throw new Error('官方安装器未产出预期 release 目录');
       }
-      this.meta = { version: bundle.match(INNER_RE)?.[1] ?? 'unknown', bundle, release, innerSha: inner.sha, fetchedAt: new Date().toISOString() };
+      this.meta = { version: inner.name.match(INNER_RE)?.[1] ?? 'unknown', bundle, release, innerSha: inner.sha, fetchedAt: new Date().toISOString() };
       fs.writeFileSync(this.metaPath, JSON.stringify(this.meta, null, 2));
       this.log('fetch done', { version: this.meta.version });
       this.state = { status: 'ready', message: null };

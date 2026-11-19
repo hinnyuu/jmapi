@@ -58,6 +58,17 @@ assert_contains() { # 消息 文本 标记
 }
 http_code() { curl -s -o /dev/null -w '%{http_code}' --max-time 6 "$@"; }
 
+# 轮询任意端点直至拿到 200（容器启动有秒级竞态，单次 curl 会假红）；返回最后状态码
+wait_http() {
+  local url="$1" limit="$2" deadline=$((SECONDS + $2)) code=000
+  while [ "$SECONDS" -lt "$deadline" ]; do
+    code="$(http_code "$url")"
+    [ "$code" = "200" ] && break
+    sleep 1
+  done
+  printf '%s' "$code"
+}
+
 # 轮询 readyz：base_url 超时秒数；200 即返回 0
 wait_ready() {
   local base="$1" limit="$2" deadline=$((SECONDS + $2))
@@ -130,6 +141,11 @@ cleanup() {
     for c in $(as_podman ps -aq --filter "name=^${TAG}" 2>/dev/null); do
       echo "-- logs $c --"; as_podman logs --tail 25 "$c" 2>&1 | tail -25
     done
+    if [ -n "$CREATED_USER" ]; then
+      for c in $(alt_podman ps -aq --filter "name=^${TAG}" 2>/dev/null); do
+        echo "-- logs(alt) $c --"; alt_podman logs --tail 25 "$c" 2>&1 | tail -25
+      done
+    fi
   fi
   # rootless 侧（dev 或当前用户）
   ids="$(as_podman ps -aq --filter "name=^${TAG}" 2>/dev/null)"
@@ -210,7 +226,7 @@ fi
 PORT1="$(pick_port)" || exit 1
 BASE1="http://127.0.0.1:${PORT1}"
 start_container as_podman "${TAG}-t1" "$PORT1" "${B1}/state" "${B1}/config" "${B1}/output"
-assert_eq "T1 healthz 恒 200" "200" "$(http_code "${BASE1}/healthz")"
+assert_eq "T1 healthz 恒 200" "200" "$(wait_http "${BASE1}/healthz" 15)"
 check_ready "T1" "$BASE1" 180
 assert_eq "T1 /v1/models 无 key 401" "401" "$(http_code "${BASE1}/v1/models")"
 assert_contains "T1 401 OpenAI 错误信封" "$(curl -s --max-time 6 "${BASE1}/v1/models")" '"error"'
@@ -222,7 +238,7 @@ else
 fi
 META1="$(meta_path "${B1}/state")"
 assert_eq "T1 meta.json 宿主属主==bind 目录属主" "$(stat -c %u "${B1}/state")" "$(stat -c %u "$META1" 2>/dev/null)"
-assert_eq "T1 容器内进程 uid（rootless+属主即 userns owner→0）" "0" "$(as_podman exec "${TAG}-t1" id -u 2>/dev/null)"
+assert_eq "T1 容器内进程 uid（rootless+属主即 userns owner→0）" "0" "$(as_podman exec "${TAG}-t1" awk '/^Uid:/{print $2}' /proc/1/status 2>/dev/null)"
 assert_contains "T1 首启日志 fetch 标记" "$(as_podman logs "${TAG}-t1" 2>&1)" "fetch"
 
 # ---------- T2 删容器重建（缓存命中） ----------
@@ -256,7 +272,7 @@ if [ "$MATRIX" = "full" ]; then
     root_podman pull "$IMAGE" >/dev/null 2>&1
     start_container root_podman "${TAG}-t5" "$PORT5" "${B5}/state" "${B5}/config" "${B5}/output"
     check_ready "T5" "http://127.0.0.1:${PORT5}" 180
-    assert_eq "T5 容器内进程 uid（rootful→1000）" "1000" "$(root_podman exec "${TAG}-t5" id -u 2>/dev/null)"
+    assert_eq "T5 容器内进程 uid（rootful→1000）" "1000" "$(root_podman exec "${TAG}-t5" awk '/^Uid:/{print $2}' /proc/1/status 2>/dev/null)"
     assert_eq "T5 宿主 meta.json 属主==1000" "1000" "$(stat -c %u "$(meta_path "${B5}/state")" 2>/dev/null)"
   else
     echo "  SKIP: T5 rootful+bind（无 root/sudo）"
@@ -295,12 +311,16 @@ if [ "$MATRIX" = "full" ]; then
     }
     B6="${BIND_ROOT}/t6"
     prepare_bind "$B6" "$ALT_UID"
-    alt_podman pull "$IMAGE" >/dev/null 2>&1
+    if ! alt_podman pull "$IMAGE"; then echo "  FAIL: T6 临时用户侧 pull 失败"; fi
     PORT6="$(pick_port)" || exit 1
     start_container alt_podman "${TAG}-t6" "$PORT6" "${B6}/state" "${B6}/config" "${B6}/output"
-    check_ready "T6" "http://127.0.0.1:${PORT6}" 180
+    if ! check_ready "T6" "http://127.0.0.1:${PORT6}" 180; then
+      echo "-- T6 诊断：alt 侧容器与日志 --"
+      alt_podman ps -a --filter "name=${TAG}" 2>&1 | tail -5
+      alt_podman logs --tail 30 "${TAG}-t6" 2>&1 | tail -30
+    fi
     assert_eq "T6 meta.json 宿主属主==临时用户 uid" "$ALT_UID" "$(stat -c %u "$(meta_path "${B6}/state")" 2>/dev/null)"
-    assert_eq "T6 容器内进程 uid（rootless→0）" "0" "$(alt_podman exec "${TAG}-t6" id -u 2>/dev/null)"
+    assert_eq "T6 容器内进程 uid（rootless→0）" "0" "$(alt_podman exec "${TAG}-t6" awk '/^Uid:/{print $2}' /proc/1/status 2>/dev/null)"
   fi
 
   # T7 docker + bind

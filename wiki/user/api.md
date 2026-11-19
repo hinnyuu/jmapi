@@ -35,6 +35,8 @@ curl -s http://<lan-host>:8080/api/v1/tasks/<task_id> -H "Authorization: Bearer 
 ```bash
 curl -s http://<lan-host>:8080/healthz   # {"status":"ok"}
 curl -s http://<lan-host>:8080/readyz    # 首启 fetch 期间 503，就绪后 200
+# admin 只绑容器 loopback：宿主经 exec 访问，含实际 CLI 版本号与登录态
+podman exec jmapi curl -s http://127.0.0.1:8081/admin/status
 ```
 
 ## 注意
