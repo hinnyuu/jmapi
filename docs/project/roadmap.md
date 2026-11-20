@@ -37,3 +37,37 @@ admin 不出公网）；公网默认值全量负例测试（签名 URL 过期/�
 
 Anthropic/chat 兼容（即梦文本为封闭 schema 的结构化剧本工具，无自由聊天）；
 画布工作流面（高级能力将来或开薄透传后门，另议）；音频分离/配音翻译（CLI 不提供）。
+## 维护段（M0-M3 闭环后；2026-11-20 定稿）
+
+> 节奏：P0 随首次真实部署一次做完；P1 按 5→6→7 顺序各走一个维护 PR；P2 按需立项。
+> 铁律不变：conventional commits + PR 全门禁 + 残留 runbook 三件套 + grounding + 积分触发器呼叫人工。
+
+### P0 — 真实部署时必做
+
+1. 补项 6 ACME 实测（runbook 项 6）：自有域名 + 安全组仅 80/443，真证书链无 -k + 安全头核对；回写 runbook。
+2. 备份落地：/state 卷（凭据 home/ + ledger + CLI 缓存）加密快照定时任务；/output 按需归档；config.toml 入配置管理（不含 key）。
+3. key 管理演练：轮换流程与泄漏应急（轮换 + ledger 审计）写入 production.md 运维节。
+4. 监控接采集：access JSON + admin/status（creditsToday/login/cli）接告警（积分帽 429、readyz 503 持续、上游 AUTH_FAILED）。
+
+### P1 — 近期高价值
+
+5. input_reference 参考图上传（M2 留的 400 边界）：multipart 文件部分落盘 + CLI --image 透传（图生图/视频参考，价值最高）。
+6. CLI 版本升级 runbook：versions.lock 钉版 + 升级重录脱敏 fixture + 全契约回归 + live 抽测固定流程。
+7. ledger 维护：JSONL rotate/compact 任务（保留 day 汇总供积分帽审计）。
+8. SELinux CI 覆盖闭合：Fedora enforcing self-hosted runner 或 container job 进矩阵（项 1 现靠宿主实测）。
+9. 并发闸实证校准：压测校准 maxConcurrent 默认值（2H2G 估值 4）并写入 production.md。
+
+### P2 — 可选扩展
+
+10. 任务完成通知：webhook 回调或 SSE（复用任务表状态机）。
+11. upscale/compose API 化（compose 需 ffmpeg → WITH_FFMPEG 变体或宿主侧；许可边界见 NOTICE）。
+12. 多 key/多空间：per-key 隔离与 team-id 透传（当前单 key 单空间为个人形态诚实边界）。
+13. /metrics 轻量观测（Prometheus 文本：jobs 计数/积分/延迟分位）。
+14. API 版本化承诺：/v1 稳定 + breaking change 走 history + deprecation 窗口写入 docs/api.md。
+
+### 诚实债务清单（已知边界，非缺陷）
+
+- 限流窗口在内存，重启重置（个人形态可接受，文档注明）；签名密钥=API key，轮换即失效旧 URL。
+- 单账号积分集中：条款边界与烧积分风险靠积分帽+限流+告警缓解；多人共用前须评估。
+- Windows 宿主未覆盖（容器路径 Linux only）。
+- 开发机 podman 4.3 无 Quadlet（生产宿主选 ≥4.4；trailblazer 5.8 已验证）。
