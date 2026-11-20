@@ -307,5 +307,25 @@
     "supersedes": [],
     "superseded_by": [],
     "pr": "1"
+  },
+  {
+    "file": "2026-11-20-1416-quadlet-bind-conflict-fix.md",
+    "title": "quadlet 双栈 bind 冲突修复与项 1 正负例用户实测 PASS 记录",
+    "date": "2026-11-20T14:16:00+08:00",
+    "keywords": [
+      "quadlet",
+      "publishport",
+      "dual-stack",
+      "bind-conflict",
+      "execution-record"
+    ],
+    "scope": [
+      "project"
+    ],
+    "type": "change",
+    "status": "accepted",
+    "supersedes": [],
+    "superseded_by": [],
+    "pr": "1"
   }
 ]

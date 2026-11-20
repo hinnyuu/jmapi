@@ -105,9 +105,9 @@ podman --version   # 前置确认：≥4.4
 loginctl enable-linger "$USER"
 mkdir -p ~/.config/containers/systemd ~/.config/jmapi ~/jmapi-data/{config,state,output}
 printf 'dailyCreditCap = 500\n' > ~/jmapi-data/config/config.toml
-curl -fsSL https://raw.githubusercontent.com/hinnyuu/jmapi/799a2884bced899d3dc72b750064d1d5f5434177/deploy/quadlet/jmapi.container \
+curl -fsSL https://raw.githubusercontent.com/hinnyuu/jmapi/f79df61a0aeab7e184d83d6a464863297420204d/deploy/quadlet/jmapi.container \
   -o ~/.config/containers/systemd/jmapi.container
-curl -fsSL https://raw.githubusercontent.com/hinnyuu/jmapi/799a2884bced899d3dc72b750064d1d5f5434177/deploy/env.example \
+curl -fsSL https://raw.githubusercontent.com/hinnyuu/jmapi/f79df61a0aeab7e184d83d6a464863297420204d/deploy/env.example \
   -o ~/.config/jmapi/env
 sed -i 's/sk-REPLACE_ME/jmapi-smoke-test-key/' ~/.config/jmapi/env
 sed -i 's|ghcr.io/hinnyuu/jmapi:latest|ghcr.io/hinnyuu/jmapi:pr-1|' ~/.config/containers/systemd/jmapi.container
