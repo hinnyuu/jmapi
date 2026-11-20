@@ -21,6 +21,7 @@
 
 - M3 sign-off 代录 + squash merge PR #4 + release 重冒烟；**项 6 SKIP(deferred) 用户批准**（history 2010）。
 - merge 后项目进入维护态：roadmap M0-M3 全闭环。
+- 维护首修：config.test 临时目录泄漏清理铁律违例修复（fix/test-tmp-cleanup，PR #5）。
 
 ## 下一动作
 
