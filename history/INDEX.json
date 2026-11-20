@@ -370,5 +370,27 @@
     "supersedes": [],
     "superseded_by": [],
     "pr": "1"
+  },
+  {
+    "file": "2026-11-20-1515-item3-v4-devvm-highport.md",
+    "title": "项 3 v4：开发机宿主 + 高位端口 + CI 外部视角（含起栈两坑）",
+    "date": "2026-11-20T15:15:00+08:00",
+    "keywords": [
+      "item3",
+      "wan",
+      "high-port",
+      "tls-internal",
+      "hairpin",
+      "acceptance-wan",
+      "caddy-bind"
+    ],
+    "scope": [
+      "project"
+    ],
+    "type": "change",
+    "status": "accepted",
+    "supersedes": [],
+    "superseded_by": [],
+    "pr": "1"
   }
 ]

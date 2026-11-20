@@ -152,71 +152,50 @@ rm -rf ~/jmapi-data
 podman rm -f jmapi 2>/dev/null || true
 ```
 
-## 项 3：公网 Caddy WAN 侧（管理员协同；路由策略已由 smoke T8 自动化）
+## 项 3：公网 Caddy WAN 侧（本开发机宿主 + 高位端口 + CI 外部视角）
 
-### 分工
+### 分工与选型（v4）
 
-- **路由策略/TLS 终止/鉴权透传已由自动化冒烟 T8 覆盖**（caddy 容器 + tls internal + loopback）。
-  本项仅验 WAN 暴露面。
-- **管理员（宿主侧）**：jmapi 起服务、防火墙/安全组、Caddy 安装与站点加载；每步回复输出。
-- **agent（WAN 侧）**：从开发机（相对宿主为外网）执行全部通过标准探测并判读；无需管理员找外网设备。
-- 域名免 DNS 操作方案：`<公网IP>.nip.io` 泛解析（公网可解析，Caddy ACME 自动签证）；
-  有自有域名则替换之。agent 生成 Caddyfile 内容交管理员加载。
+- **路由策略/TLS 终止/鉴权透传已由 smoke T8 覆盖**；本项仅验 WAN 暴露面。
+- **宿主 = 开发机**（agent 全控：jmapi + caddy 容器、uhub caddy 镜像）；验收验配置性质，与部署宿主无关。
+- **高位端口 28443 + `tls internal` 自签 + 外部 `curl -k`**：免 ACME（80/443 硬依赖）、避开宿主既有
+  80/443 服务、防火墙增量最小；**ACME 公网信任链留真实部署时验**（生产路径文档保留）。
+- **site 用不可解析假域名 `jmapi-wan.test`**（可解析域名会使 caddy bind 非本地 IP 而退出，实测）；
+  外部以 `--resolve` 指向公网 IP。
+- **WAN 视角 = CI manual workflow `acceptance-wan.yaml`**（GitHub runner 真外部；宿主自探是 hairpin，
+  负例不可用）；管理员唯一动作：安全组临时放行 28443/tcp，测毕关闭。
 
-### 前置（管理员提供/确认）
-
-```bash
-# 1 公网 IP（宿主执行，回复输出）
-curl -s --max-time 8 https://ifconfig.me
-# 2 jmapi 起服务（项 2 已清理则重跑项 2 执行段，保留运行；或 deploy/run.sh），回复：
-curl -s http://127.0.0.1:8080/healthz   # 期望 {"status":"ok"}
-# 3 防火墙/安全组仅放 80/443（云控制台或主机防火墙），回复规则输出，例如：
-sudo nft list ruleset 2>/dev/null | head -30   # 或 sudo iptables -L -n | head -30
-# 4 Caddy 可用性（回复哪种）：已装系统包 / 可装系统包 / 仅容器（rootful --network host）/ 均否
-command -v caddy || echo NO-CADDY
-```
-
-### 执行（管理员操作，agent 提供 Caddyfile 与命令并判读输出）
+### 前置（管理员）
 
 ```bash
-# 系统包路径（域名由 agent 按 nip.io 或自有域名给出，下方以 <DOMAIN> 占位）
-curl -fsSL https://raw.githubusercontent.com/hinnyuu/jmapi/998bd642e7cb874943b3bea90f846c458f125577/deploy/Caddyfile.example \
-  -o /tmp/jmapi.caddy
-sed -i 's/jmapi.example.com/<DOMAIN>/' /tmp/jmapi.caddy
-sudo caddy validate --config /tmp/jmapi.caddy   # 期望 Valid configuration
-# 加载：系统包 sudo cp /tmp/jmapi.caddy /etc/caddy/Caddyfile && sudo systemctl reload caddy
-# 或临时前台：sudo caddy run --config /tmp/jmapi.caddy（验收期保持运行）
-# 容器路径（无系统包时）：sudo podman run -d --name jmapi-caddy --network host \
-#   -v /tmp/jmapi.caddy:/etc/caddy/Caddyfile:ro,Z docker.io/library/caddy:2-alpine
+# 云安全组临时放行 28443/tcp；确认 8080/8081 对外关闭；回复确认
+# agent 起栈（开发机）：jmapi(pr-1)+caddy(uhub) 于 podman 网络，caddy -p 28443:8443，
+# Caddyfile 由 deploy/Caddyfile.example 生成：site jmapi-wan.test:8443 + tls internal +
+# reverse_proxy <jmapi容器IP>:8080；配置须由可读 repo 的身份生成（dev 读不了 /root，实测坑）
 ```
 
-### 通过标准（agent 从开发机执行，WAN 视角）
+### 执行（agent 触发 CI）
 
 ```bash
-curl -s -o /dev/null -w '%{http_code}\n' https://<DOMAIN>/admin/status
-# 期望：404（Caddy 不代理 admin）
-curl -s -o /dev/null -w '%{http_code}\n' --max-time 8 http://<公网IP>:8081/admin/status
-# 期望：000（admin 未暴露 WAN）
-curl -s -o /dev/null -w '%{http_code}\n' --max-time 8 http://<公网IP>:8080/healthz
-# 期望：000（明文业务端口未暴露 WAN；依赖防火墙前提）
-curl -s https://<DOMAIN>/healthz
-# 期望：{"status":"ok"}（ACME 自动 HTTPS；nip.io 泛解析免 DNS 操作）
-curl -s -o /dev/null -w '%{http_code}\n' https://<DOMAIN>/v1/models
-# 期望：401（无 key）
-curl -s -o /dev/null -w '%{http_code}\n' -H 'Authorization: Bearer jmapi-smoke-test-key' https://<DOMAIN>/v1/models
-# 期望：501（M0 未实现；M1 后为 200）
+gh workflow run acceptance-wan.yaml -f target_ip=<EIP> -f tls_port=28443
+gh run watch --exit-status   # 或 gh run view --log 判读六断言
 ```
 
-### 清理（管理员操作，agent 复探确认关闭）
+### 通过标准（CI 外部执行，六断言）
 
 ```bash
-# 系统包：sudo rm -f /etc/caddy/Caddyfile && sudo systemctl reload caddy（或停临时前台进程）
-# 容器：sudo podman rm -f jmapi-caddy
-rm -f /tmp/jmapi.caddy
-# jmapi 本体若不再需要：按项 2 清理段
+# https://jmapi-wan.test:28443（--resolve 指向 EIP，-k）：
+#   /healthz 200；/admin/status 404；/v1/models 401；带 key 501
+# http://<EIP>:8080/healthz 与 http://<EIP>:8081/admin/status：000（WAN 不可达）
 ```
 
-agent 复探：`https://<DOMAIN>/healthz` 期望 000/502（站点已撤），`http://<IP>:8080` 仍 000。
+### 清理（agent + 管理员）
+
+```bash
+# agent：podman rm -f jm-wan-api jm-wan-caddy；podman network rm jm-wan-net；rm -rf /tmp/jm-wan-*
+# 管理员：安全组关闭 28443/tcp
+# agent 复探（CI 或外部）：https 28443 与 http 8080/8081 全 000 确认关闭
+```
 
 ## sign-off 记录格式
 
