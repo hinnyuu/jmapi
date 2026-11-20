@@ -20,7 +20,7 @@ function taskOutput(ctx, job) {
   return out;
 }
 
-async function pollIfNeeded(ctx, job) {
+export async function pollIfNeeded(ctx, job) {
   if (job.kind === 'video' && (job.status === 'queued' || job.status === 'in_progress')) {
     const env = await ctx.execCli(ctx.fetcher.binary, ['query-result', '--thread-id', job.thread_id, '--run-id', job.run_id,
       '--out', path.join(ctx.outputDir, job.id) + '/']);

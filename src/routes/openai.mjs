@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { signedFileUrl } from '../files.mjs';
 import { sendJson, openaiError } from '../server.mjs';
+import { pollIfNeeded } from './dashscope.mjs';
 
 const RATIOS = [[16 / 9, '16:9'], [21 / 9, '21:9'], [9 / 16, '9:16'], [4 / 3, '4:3'], [3 / 4, '3:4'], [1, '1:1']];
 
@@ -187,7 +188,7 @@ export async function handleOpenAI(req, res, ctx, pathname, body) {
   if (req.method === 'GET' && jobGet) {
     const job = ctx.jobs.get(jobGet[1]);
     if (!job) return sendJson(res, 404, openaiError('not_found', 'job 不存在'));
-    const cur = (job.kind === 'video' && (job.status === 'queued' || job.status === 'in_progress')) ? await pollVideo(ctx, job) : job;
+    const cur = await pollIfNeeded(ctx, job);
     return sendJson(res, 200, {
       id: cur.id, kind: cur.kind, status: cur.status, credits: cur.credits,
       outputs: urlsFor(ctx, cur), error: cur.error,
