@@ -57,7 +57,14 @@ const jobs = new JobStore(stateDir, log);
 const cliHome = path.join(stateDir, 'home');
 fs.mkdirSync(cliHome, { recursive: true });
 process.env.HOME = cliHome;
-const ctx = { fetcher, apiKey, config, execCli, jobs, outputDir, baseUrl: 'http://local' };
+const scriptDir = path.join(stateDir, 'script');
+const reloadConfig = () => {
+  const next = loadConfig(configPath);
+  Object.assign(config, next);
+  log('config reloaded', { dailyCreditCap: config.dailyCreditCap });
+  if (config.capDisabledWarning) log('warning', { message: 'dailyCreditCap=0：积分帽已关闭' });
+};
+const ctx = { fetcher, apiKey, config, execCli, jobs, outputDir, scriptDir, reloadConfig, baseUrl: 'http://local' };
 
 const business = createBusinessServer({ ctx });
 const admin = createAdminServer({ ctx });
@@ -88,10 +95,7 @@ fetchLoop();
 
 process.on('SIGHUP', () => {
   try {
-    const next = loadConfig(configPath);
-    Object.assign(config, next);
-    log('config reloaded', { dailyCreditCap: config.dailyCreditCap });
-    if (config.capDisabledWarning) log('warning', { message: 'dailyCreditCap=0：积分帽已关闭' });
+    reloadConfig();
   } catch (err) {
     log('config reload failed', { message: err.message });
   }

@@ -32,6 +32,11 @@ files.mjs        HMAC-SHA256 签名 URL（exp+sig，apiKey 为密钥）；文件
 routes/openai.mjs models/images 同步/videos 异步/content/jobs 通用；size→最近 ratio；
                  错误映射 AUTH→502/INVALID_ARGUMENT→400/其余 502+logId；
                  running≠失败：images 超时 504+jobId 轮询扩展端点
+routes/dashscope.mjs 异步任务面（X-DashScope-Async 强制）；共享 jobs；DS_STATUS 映射；
+                 task 查询按 kind 轮询（video query-result / script script result）
+routes/audio.mjs speech=qwen_tts 流式 wav（voice 忽略）；generations=seed_audio 签名 URL
+routes/script.mjs outline/episode；隐藏绑定 state/script 首次 init；execCli cwd 支持
+admin            login/login wait/cli refresh/config reload（loopback/LAN only）
 server.mjs       guards：per-key 分钟窗口限流 + 生成类全局并发闸（429）；readBody 上限 413
                  （drain 不 destroy）；**JSON + multipart 纯字段双解析**（SDK videos.create
                  发 multipart，实测抓出；文件部分 400）；/files 签名面；/v1 分发；/api 501（M2）
