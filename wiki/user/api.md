@@ -64,6 +64,8 @@ podman exec jmapi curl -s http://127.0.0.1:8081/admin/status
 ## 注意
 
 - 服务默认双栈监听：IPv4 与 IPv6（含反代两族）皆可达；`JMAPI_BIND` 可覆盖。
+- 响应头：JSON `no-store`+nosniff；签名文件 nosniff+private max-age=3600；反代边缘另有安全头（见 production.md）。
+- 访问日志仅 method/path/status/ms（不含 key/签名），可接日志采集做监控/告警。
 - 模型名直曝即梦 model key（`model list` 可查）；积分帽默认 500/天，超限新提交被拒。
 - 视频为异步：running 不是失败，轮询即可，不要重复提交。
 - 音频 speech 端点无 voice/音色参数（qwen_tts 能力边界）。
