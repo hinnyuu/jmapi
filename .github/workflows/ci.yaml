@@ -116,11 +116,22 @@ jobs:
           # ubuntu 24.04 默认限制非特权 userns（AppArmor），放宽以允许 rootless podman（仅 CI 临时环境）
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 2>/dev/null || true
           podman --version
+      - name: caddy 镜像 digest 与 versions.lock 比对
+        env:
+          CADDY_IMAGE: docker.io/library/caddy:2-alpine
+        run: |
+          CADDY_DIGEST=$(docker manifest inspect "$CADDY_IMAGE" --verbose | jq -r 'if type=="array" then .[0].Descriptor.digest else .Descriptor.digest end')
+          LOCK=$(python3 -c "import json;print(json.load(open('versions.lock'))['caddyDigest'])")
+          echo "caddy digest: $CADDY_DIGEST (lock: ${LOCK:-empty})"
+          if [ -n "$LOCK" ] && [ "$LOCK" != "$CADDY_DIGEST" ]; then
+            echo "caddy 镜像 digest 漂移：lock=$LOCK resolved=$CADDY_DIGEST"; exit 1
+          fi
       - name: 容器冒烟测试（full 矩阵）
         env:
           REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           JMAPI_SMOKE_MATRIX: full
+          JMAPI_SMOKE_CADDY_IMAGE: docker.io/library/caddy:2-alpine
         run: |
           case "$PR_NUMBER" in ''|*[!0-9]*) echo "invalid PR_NUMBER"; exit 1;; esac
           bash scripts/acceptance/smoke.sh "ghcr.io/${REPO}:pr-${PR_NUMBER}"

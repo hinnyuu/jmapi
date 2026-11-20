@@ -125,8 +125,11 @@ meta_path() {
 
 # 统一启动：引擎函数 容器名 主机端口 state源(bind路径或命名卷) config目录 output目录
 start_container() {
-  local engine="$1" name="$2" port="$3" state="$4" cfg="$5" out="$6"
+  local engine="$1" name="$2" port="$3" state="$4" cfg="$5" out="$6" net="${7:-}"
+  local netargs=()
+  [ -n "$net" ] && netargs=(--network "$net")
   "$engine" run -d --name "$name" \
+    "${netargs[@]}" \
     -p "${port}:8080" \
     -e "JMAPI_API_KEY=${API_KEY}" \
     -e "JMAPI_CLI_SOURCE=${CLI_SOURCE}" \
@@ -157,6 +160,7 @@ cleanup() {
   vols="$(as_podman volume ls -q --filter "name=^${TAG}" 2>/dev/null)"
   # shellcheck disable=SC2086
   [ -n "$vols" ] && as_podman volume rm $vols >/dev/null 2>&1
+  as_podman network ls -q --filter "name=^${TAG}" 2>/dev/null | xargs -r as_podman network rm >/dev/null 2>&1
   as_podman rmi "$IMAGE" >/dev/null 2>&1
   # rootful 侧（仅 root 或免密 sudo 可用时）
   if [ "$ROOT_EUID" -eq 0 ] || sudo -n true 2>/dev/null; then
@@ -343,6 +347,53 @@ if [ "$MATRIX" = "full" ]; then
     echo "  SKIP: T7 docker+bind（未安装 docker）"
   fi
 fi
+
+# T8 Caddy 路由自测：tls internal 自签 + loopback，验路由策略/鉴权透传（WAN 侧留人工 runbook）
+echo "== T8 Caddy 路由自测（自签 TLS + loopback）=="
+CADDY_IMAGE="${JMAPI_SMOKE_CADDY_IMAGE:-}"
+if [ -z "$CADDY_IMAGE" ]; then
+  if [ "$ROOT_EUID" -eq 0 ] && id dev >/dev/null 2>&1; then
+    CADDY_IMAGE=uhub.service.ucloud.cn/hinnyuu/caddy:latest
+  else
+    CADDY_IMAGE=docker.io/library/caddy:2-alpine
+  fi
+fi
+B8="${BIND_ROOT}/t8"
+if [ "$ROOT_EUID" -eq 0 ] && id dev >/dev/null 2>&1; then
+  prepare_bind "$B8" 1000
+else
+  prepare_bind "$B8" "$(id -u)"
+fi
+PORT8="$(pick_port)" || exit 1
+PORT8TLS="$(pick_port)" || exit 1
+if ! as_podman pull "$CADDY_IMAGE" >/dev/null 2>&1; then echo "  FAIL: T8 caddy 镜像 pull（${CADDY_IMAGE}）"; fi
+as_podman network create "${TAG}-net" >/dev/null 2>&1 || true
+# 启动即挂自定义网络：rootless podman 4.3 不支持对运行中容器 network connect（slirp4netns 模式，实测）
+start_container as_podman "${TAG}-t8" "$PORT8" "${B8}/state" "${B8}/config" "${B8}/output" "${TAG}-net"
+# 上游用容器 IP 而非别名：本机 podman rootless 跨容器 DNS 不工作（aardvark 在但 resolv.conf 未接管，实测）；IP 路径本机/CI 通用
+JM_IP="$(as_podman inspect "${TAG}-t8" --format '{{range $k,$v := .NetworkSettings.Networks}}{{$k}}={{$v.IPAddress}} {{end}}' 2>/dev/null | tr ' ' '\n' | grep "^${TAG}-net=" | cut -d= -f2)"
+if [ -z "$JM_IP" ]; then echo "  FAIL: T8 取 jmapi 容器 IP 失败"; fi
+# 站点用假域名（port-only site 无 automation policy，internal CA 不发证→TLS internal error，实测）；
+# caddy 对非 loopback 域名监听全接口；宿主 curl 以 --resolve 供 SNI
+sed -e 's/jmapi.example.com/jmapi-t8.test:8443/' \
+    -e "s/reverse_proxy 127.0.0.1:8080/reverse_proxy ${JM_IP}:8080/" \
+    deploy/Caddyfile.example > "${B8}/Caddyfile"
+sed -i '/^jmapi-t8.test:8443 {/a\  tls internal' "${B8}/Caddyfile"
+as_podman run -d --name "${TAG}-t8-caddy" --network "${TAG}-net" \
+  -p "127.0.0.1:${PORT8TLS}:8443" \
+  -v "${B8}/Caddyfile:/etc/caddy/Caddyfile:ro,Z" \
+  "$CADDY_IMAGE" >/dev/null 2>&1
+check_ready "T8" "http://127.0.0.1:${PORT8}" 180
+TLSBASE="https://jmapi-t8.test:${PORT8TLS}"
+TLSRES="--resolve jmapi-t8.test:${PORT8TLS}:127.0.0.1"
+for i in $(seq 1 15); do
+  [ "$(http_code -k $TLSRES "${TLSBASE}/healthz")" = "200" ] && break
+  sleep 2
+done
+assert_eq "T8 自签 TLS healthz 200" "200" "$(http_code -k $TLSRES "${TLSBASE}/healthz")"
+assert_eq "T8 admin 不经反代 404" "404" "$(http_code -k $TLSRES "${TLSBASE}/admin/status")"
+assert_eq "T8 无 key 401" "401" "$(http_code -k $TLSRES "${TLSBASE}/v1/models")"
+assert_eq "T8 有 key M0 未实现 501" "501" "$(http_code -k $TLSRES -H "Authorization: Bearer ${API_KEY}" "${TLSBASE}/v1/models")"
 
 echo
 echo "== 冒烟结果：PASS=${PASS} FAIL=${FAIL} =="

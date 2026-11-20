@@ -5,5 +5,8 @@
   "cliInstallerUrl": "https://jimeng.jianying.com/novel-cli",
   "cliPackageUrl": "https://lf3-static.bytednsdoc.com/obj/eden-cn/psj_slcvu_hupthlyk/ljhwZthlaukjlkulzlp/jimeng-novel/versions/1.0.9/scm-317/general/package.tar.gz",
   "cliVersion": "1.0.9",
-  "cliInnerSha256LinuxAmd64": "ec87262311b341844fa8157f2dacb8dec0b6819950f1919e675b41aa32a3ee89"
+  "cliInnerSha256LinuxAmd64": "ec87262311b341844fa8157f2dacb8dec0b6819950f1919e675b41aa32a3ee89",
+  "caddyImage": "docker.io/library/caddy:2-alpine",
+  "caddyDigest": "",
+  "caddyDigestNote": "T8 自测用；CI 解析 docker.io 比对；本机用 uhub.service.ucloud.cn/hinnyuu/caddy:latest（内网镜像库管理）"
 }
