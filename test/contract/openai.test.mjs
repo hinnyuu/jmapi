@@ -162,6 +162,25 @@ test('body 上限与坏 JSON（负例）', async (t) => {
   assert.equal(bad.status, 400);
 });
 
+test('videos 接受 SDK 式 multipart 纯字段；文件部分 400（负例）', async (t) => {
+  const { base } = await withServer(t);
+  const fd = new FormData();
+  fd.append('model', 'Seedance_2.0_mini');
+  fd.append('prompt', 'cat');
+  fd.append('seconds', '4');
+  fd.append('size', '854x480');
+  const res = await fetch(base + '/v1/videos', { method: 'POST', headers: { Authorization: 'Bearer test-key' }, body: fd });
+  assert.equal(res.status, 200);
+  assert.equal((await res.json()).status, 'queued');
+  const fd2 = new FormData();
+  fd2.append('model', 'm');
+  fd2.append('prompt', 'p');
+  fd2.append('input_reference', new Blob(['x'], { type: 'image/png' }), 'ref.png');
+  const res2 = await fetch(base + '/v1/videos', { method: 'POST', headers: { Authorization: 'Bearer test-key' }, body: fd2 });
+  assert.equal(res2.status, 400);
+  assert.equal((await res2.json()).error.code, 'unsupported_parameter');
+});
+
 test('参数校验负例：缺 prompt/坏 size/坏 n/坏 seconds', async (t) => {
   const { base, H } = await withServer(t);
   const cases = [

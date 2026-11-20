@@ -21,7 +21,8 @@
 
 ## in-flight
 
-- M1 PR #2：CI 六 job 全绿 + 本机 dev rootless smoke 19/19（pr-2 镜像）；待用户 live 批准 + sign-off + approve。
+- live 实测首轮：images 成功（3 积分）但 videos.create 400 → **SDK 发 multipart**（OpenAI 真实
+  端点形态）→ multipart 纯字段解析已实现+契约负例（46/46）；待新 pr-2 镜像重跑 live → sign-off → merge。
 
 ## 下一动作
 

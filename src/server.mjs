@@ -45,6 +45,30 @@ export function openaiError(code, message, type = 'invalid_request_error', param
   return { error: { message, type, code, param } };
 }
 
+// OpenAI 真实 /v1/videos 接受 multipart（input_reference 上传），SDK 照发；须兼容纯字段 multipart
+export function parseMultipart(buf, boundary) {
+  const delim = Buffer.from('--' + boundary);
+  const parts = [];
+  let idx = buf.indexOf(delim);
+  while (idx !== -1) {
+    const start = idx + delim.length;
+    if (buf.subarray(start, start + 2).toString() === '--') break;
+    const next = buf.indexOf(delim, start);
+    const segment = buf.subarray(start, next === -1 ? buf.length : next);
+    const headerEnd = segment.indexOf('\r\n\r\n');
+    if (headerEnd === -1) break;
+    const headers = segment.subarray(2, headerEnd).toString();
+    const body = segment.subarray(headerEnd + 4, Math.max(headerEnd + 4, segment.length - 2));
+    parts.push({
+      name: /name="([^"]+)"/.exec(headers)?.[1] || null,
+      filename: /filename="([^"]*)"/.exec(headers)?.[1] ?? null,
+      body,
+    });
+    idx = next;
+  }
+  return parts;
+}
+
 export function readBody(req, limit) {
   return new Promise((resolve, reject) => {
     let size = 0;
@@ -63,8 +87,22 @@ export function readBody(req, limit) {
     });
     req.on('end', () => {
       if (!chunks.length) return resolve({});
+      const buf = Buffer.concat(chunks);
+      const ct = req.headers['content-type'] || '';
+      if (ct.startsWith('multipart/form-data')) {
+        const boundary = /boundary=(?:"([^"]+)"|([^;]+))/i.exec(ct);
+        const b = boundary ? (boundary[1] || boundary[2]).trim() : null;
+        if (!b) return reject(Object.assign(new Error('bad boundary'), { code: 'BAD_JSON' }));
+        const parts = parseMultipart(buf, b);
+        if (parts.some((p) => p.filename !== null)) {
+          return reject(Object.assign(new Error('file parts unsupported'), { code: 'UNSUPPORTED_FILE' }));
+        }
+        const obj = {};
+        for (const p of parts) if (p.name) obj[p.name] = p.body.toString('utf8');
+        return resolve(obj);
+      }
       try {
-        resolve(JSON.parse(Buffer.concat(chunks).toString('utf8')));
+        resolve(JSON.parse(buf.toString('utf8')));
       } catch {
         reject(Object.assign(new Error('invalid JSON'), { code: 'BAD_JSON' }));
       }
@@ -143,7 +181,8 @@ export function createBusinessServer({ ctx }) {
             body = await readBody(req, ctx.config.maxBodyBytes);
           } catch (e) {
             if (e.code === 'BODY_TOO_LARGE') return sendJson(res, 413, openaiError('body_too_large', '请求体超上限'));
-            return sendJson(res, 400, openaiError('invalid_json', '请求体须为 JSON'));
+            if (e.code === 'UNSUPPORTED_FILE') return sendJson(res, 400, openaiError('unsupported_parameter', 'M1 不支持 multipart 文件部分（input_reference 留 M2+）'));
+            return sendJson(res, 400, openaiError('invalid_json', '请求体须为 JSON 或纯字段 multipart'));
           }
         }
         const proto = req.headers['x-forwarded-proto'] || 'http';

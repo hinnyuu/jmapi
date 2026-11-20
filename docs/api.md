@@ -20,7 +20,7 @@
 |---|---|---|
 | GET /v1/models | model list ×4 类型 | {object:list,data:[{id,object,owned_by:jimeng,kind}]} |
 | POST /v1/images/generations | generate-image --wait imageWaitSeconds(150) | 同步；{model,prompt,size(WxH→最近 ratio),n(1-4)}→{created,data:[{url 签名}]}；response_format 仅 url；超时 504+error.param=jobId（轮询 /v1/jobs/{id}，勿重提） |
-| POST /v1/videos | generate-video（不 wait） | 异步；{model,prompt,seconds(1-15),size}→{id,object:video,status:queued,...} |
+| POST /v1/videos | generate-video（不 wait） | 异步；{model,prompt,seconds(1-15),size}→{id,object:video,status:queued,...}；**接受 JSON 与 SDK 式 multipart 纯字段**（OpenAI 真实端点为 multipart）；文件部分 400（input_reference 留 M2+） |
 | GET /v1/videos/{id} | query-result --out（单次） | {id,status:queued\|in_progress\|completed\|failed,error} |
 | GET /v1/videos/{id}/content | 产物首文件 | completed 否则 409；video/mp4 流 |
 | GET /v1/jobs/{id} | 任务表 | 通用扩展：{id,kind,status,credits,outputs urls,error} |

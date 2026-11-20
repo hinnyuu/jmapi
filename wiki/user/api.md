@@ -21,6 +21,7 @@ vid = client.videos.create(model="Seedance_2.0_mini",
 
 超时语义：images 150s 未完成返回 504（任务未失败），按 error.param 的 jobId 轮询
 `GET /v1/jobs/{id}`，**勿重复提交**；videos 天生异步。
+videos.create 兼容官方 SDK 的 multipart 形态（纯字段）；参考图上传（input_reference）M1 不支持（400）。
 积分帽默认 500/天（UTC），达上限新提交 429；查询不受限。
 
 ## DashScope 风格（M2 起）
