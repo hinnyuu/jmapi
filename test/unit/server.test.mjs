@@ -88,6 +88,24 @@ test('默认 bind :: 双栈：IPv4 loopback 可达（pasta v6 转发锚定）', 
   assert.equal(res.status, 200);
 });
 
+test('响应安全头：JSON no-store+nosniff；访问日志不含 key/query（负例锚定）', async (t) => {
+  const lines = [];
+  const c = ctx('ready');
+  c.log = (msg, fields) => lines.push({ msg, ...fields });
+  const srv = createBusinessServer({ ctx: c });
+  await new Promise((r) => srv.listen(0, '127.0.0.1', r));
+  t.after(() => srv.close());
+  const base = `http://127.0.0.1:${srv.address().port}`;
+  const res = await fetch(base + '/v1/models?sig=secretquery', { headers: { Authorization: 'Bearer test-key' } });
+  assert.equal(res.headers.get('cache-control'), 'no-store');
+  assert.equal(res.headers.get('x-content-type-options'), 'nosniff');
+  const access = lines.find((l) => l.msg === 'access');
+  assert.equal(access.path, '/v1/models');
+  assert.equal(access.status, 200);
+  assert.ok(!JSON.stringify(lines).includes('secretquery'));
+  assert.ok(!JSON.stringify(lines).includes('test-key'));
+});
+
 test('错误信封形状符合 OpenAI 约定', () => {
   const e = openaiError('invalid_api_key', 'msg', 'authentication_error');
   assert.deepEqual(Object.keys(e.error).sort(), ['code', 'message', 'param', 'type']);

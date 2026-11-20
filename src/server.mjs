@@ -40,7 +40,12 @@ function bearer(req) {
 
 export function sendJson(res, code, body) {
   const payload = JSON.stringify(body);
-  res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': Buffer.byteLength(payload) });
+  res.writeHead(code, {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Content-Length': Buffer.byteLength(payload),
+    'Cache-Control': 'no-store',
+    'X-Content-Type-Options': 'nosniff',
+  });
   res.end(payload);
 }
 
@@ -140,6 +145,11 @@ export function createGuards(config) {
 export function createBusinessServer({ ctx }) {
   const guards = createGuards(ctx.config);
   return http.createServer(async (req, res) => {
+    const started = Date.now();
+    res.on('finish', () => {
+      // 访问日志：不含 key/签名/query，仅方法/路径/状态/耗时
+      ctx.log?.('access', { method: req.method, path: new URL(req.url, 'http://local').pathname, status: res.statusCode, ms: Date.now() - started });
+    });
     const url = new URL(req.url, 'http://local');
     const p = url.pathname;
     if (p === '/healthz') return sendJson(res, 200, { status: 'ok' });
@@ -155,7 +165,12 @@ export function createBusinessServer({ ctx }) {
         exp: url.searchParams.get('exp'), sig: url.searchParams.get('sig'),
       });
       if (!abs) return sendJson(res, 403, openaiError('invalid_signature', '签名无效/过期/路径非法', 'authentication_error'));
-      res.writeHead(200, { 'Content-Type': contentTypeFor(m[2]), 'Content-Length': fs.statSync(abs).size });
+      res.writeHead(200, {
+        'Content-Type': contentTypeFor(m[2]),
+        'Content-Length': fs.statSync(abs).size,
+        'X-Content-Type-Options': 'nosniff',
+        'Cache-Control': 'private, max-age=3600',
+      });
       fs.createReadStream(abs).pipe(res);
       return;
     }

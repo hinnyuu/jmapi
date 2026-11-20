@@ -33,6 +33,14 @@
 - CI 工具钉版本 + checksums 校验后执行（gitleaks）。
 - 依赖许可证白名单门禁；npm audit high 以上红。
 
+## 响应与日志加固（M3）
+
+- API JSON：`Cache-Control: no-store` + `X-Content-Type-Options: nosniff`；
+  签名文件：nosniff + `private, max-age=3600`；Caddy 边缘加 nosniff/no-referrer/隐藏 Server。
+- 访问日志 JSON：method/path/status/ms，**不含 key/签名/query**；凭据类字段一律 redact。
+- admin 绑定非 loopback 时启动告警（显式 opt-in 须自限来源）。
+- 生产形态（ACME/安全组/备份/升级/监控）见 [wiki/deploy/production.md](wiki/deploy/production.md)。
+
 ## 报告漏洞
 
 请勿在公开 issue 贴凭据或可利用细节。通过 GitHub 私有漏洞报告

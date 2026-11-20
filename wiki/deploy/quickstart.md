@@ -81,3 +81,4 @@ docker 宿主 SELinux 通常关闭，`:Z` 可保留（docker 忽略未知选项�
 
 SELinux enforcing 正/负例、Quadlet≥4.4、公网 Caddy 实测——本机/CI 覆盖不到，
 按 [acceptance-runbook.md](acceptance-runbook.md) 执行（完整命令+通过标准+清理）。
+真实长期运行（自有域名+ACME+80/443+备份/升级/监控）见 [production.md](production.md)。

@@ -455,5 +455,25 @@
     "supersedes": [],
     "superseded_by": [],
     "pr": "3"
+  },
+  {
+    "file": "2026-11-20-2010-m3-signoff-skip-deferred.md",
+    "title": "M3 sign-off 与项 6 SKIP(deferred) 决策；项目进入维护态",
+    "date": "2026-11-20T20:10:00+08:00",
+    "keywords": [
+      "m3",
+      "sign-off",
+      "skip-deferred",
+      "acme",
+      "maintenance-mode"
+    ],
+    "scope": [
+      "project"
+    ],
+    "type": "decision",
+    "status": "accepted",
+    "supersedes": [],
+    "superseded_by": [],
+    "pr": "4"
   }
 ]

@@ -286,3 +286,34 @@ podman exec <container> curl -s http://127.0.0.1:8081/admin/status   # creditsTo
 ```bash
 podman rm -f <container>; rm -rf <bind-root> /tmp/s.wav <scratch>
 ```
+
+## 项 6：生产 ACME 真域名验收（残留；须用户提供域名+80/443 或批准 SKIP 延至真实部署）
+
+### 前置
+
+- 自有域名 DNS 指向宿主（或批准用 <IP>.nip.io）；安全组放 80/443；Caddy 已装；jmapi 运行+登录。
+- 未提供前本项记 **SKIP(deferred)**，须用户显式批准接受风险（验收期以项 3 自签形态覆盖路由/暴露面）。
+
+### 执行
+
+```bash
+sed 's/jmapi.example.com/<DOMAIN>/' deploy/Caddyfile.example | sudo tee /etc/caddy/Caddyfile
+sudo caddy validate --config /etc/caddy/Caddyfile   # 期望 Valid configuration
+sudo systemctl reload caddy
+```
+
+### 通过标准（外网执行，无 -k：ACME 真证书链）
+
+```bash
+curl -s https://<DOMAIN>/healthz                  # 期望 {"status":"ok"}，证书链可信
+curl -s -o /dev/null -w '%{http_code}\n' https://<DOMAIN>/admin/status   # 期望 404
+curl -s -o /dev/null -w '%{http_code}\n' --max-time 8 http://<IP>:8080/healthz  # 期望 000
+curl -sI https://<DOMAIN>/v1/models | grep -iE 'x-content-type-options|referrer-policy|server'
+# 期望 nosniff + no-referrer；Server 头缺失（Caddy -Server）
+```
+
+### 清理
+
+```bash
+sudo rm -f /etc/caddy/Caddyfile && sudo systemctl reload caddy   # 或恢复原站点配置
+```
