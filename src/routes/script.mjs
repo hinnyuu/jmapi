@@ -47,7 +47,10 @@ export async function handleScript(req, res, ctx, pathname, body) {
   }
   if (b.model_key) args.push('--model-key', String(b.model_key));
   const job = ctx.jobs.create({ kind: 'script', model: b.model_key || 'script_bird' });
-  args.push('--out', ensureOutDir(ctx, job.id));
+  ctx.jobs.update(job.id, { subkind: m[1] });
+  ensureOutDir(ctx, job.id);
+  // script --out 为单 md 文件路径（传目录会致 CLI 把目录 rename 进自身 old/ → EINVAL，实测）
+  args.push('--out', path.join(ctx.outputDir, job.id, `${m[1]}.md`));
   const env = await ctx.execCli(ctx.fetcher.binary, args, { cwd: ctx.scriptDir });
   if (env.status === 'success' && env.data?.thread_id) {
     const done = env.data.completed

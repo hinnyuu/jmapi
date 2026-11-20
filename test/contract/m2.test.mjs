@@ -153,7 +153,9 @@ test('script outline：隐藏绑定 init + 完成态 outputs；缺 idea 400（�
 });
 
 test('script 异步：submit running → /v1/jobs 轮询 settle completed（负例锚定）', async (t) => {
-  const { base, H } = await withServer(t, { exec: fakeExec({ mode: 'script-running' }) });
+  const seen = [];
+  const base0 = fakeExec({ mode: 'script-running' });
+  const { base, H } = await withServer(t, { exec: async (b, a, o) => { seen.push(a); return base0(b, a, o); } });
   const res = await fetch(base + '/v1/script/outline', {
     method: 'POST', headers: H, body: JSON.stringify({ episode_num: 3, idea: '橘猫归家' }),
   });
@@ -164,6 +166,8 @@ test('script 异步：submit running → /v1/jobs 轮询 settle completed（负�
   const jb = await job.json();
   assert.equal(jb.status, 'completed');
   assert.equal(jb.kind, 'script');
+  const outArgs = seen.filter((a) => a.includes('--out'));
+  assert.ok(outArgs.every((a) => a[a.indexOf('--out') + 1].endsWith('.md')), 'script --out 须为 md 文件路径');
 });
 
 test('script 落盘失败≠生成失败：保持 in_progress+retryable（负例锚定）', async (t) => {

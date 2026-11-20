@@ -38,8 +38,9 @@ export async function pollIfNeeded(ctx, job) {
     return ctx.jobs.update(job.id, { status: 'in_progress' });
   }
   if (job.kind === 'script' && (job.status === 'queued' || job.status === 'in_progress')) {
+    ensureOutDir(ctx, job.id);
     const env = await ctx.execCli(ctx.fetcher.binary, ['script', 'result', '--thread-id', job.thread_id, '--run-id', job.run_id,
-      '--out', ensureOutDir(ctx, job.id)], { cwd: ctx.scriptDir });
+      '--out', path.join(ctx.outputDir, job.id, `${job.subkind || 'outline'}.md`)], { cwd: ctx.scriptDir });
     if (env.status === 'success' && env.data?.completed) {
       return ctx.jobs.update(job.id, {
         status: 'completed', credits: env.data.credits?.deducted ?? 0,
