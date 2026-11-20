@@ -327,5 +327,27 @@
     "supersedes": [],
     "superseded_by": [],
     "pr": "1"
+  },
+  {
+    "file": "2026-11-20-1430-dualstack-listen-fix.md",
+    "title": "项 2 复跑 v6 reset 根因：容器仅 IPv4 监听；服务改双栈 ::",
+    "date": "2026-11-20T14:30:00+08:00",
+    "keywords": [
+      "dual-stack",
+      "ipv6",
+      "pasta",
+      "listen",
+      "quadlet",
+      "pull-newer",
+      "execution-record"
+    ],
+    "scope": [
+      "project"
+    ],
+    "type": "change",
+    "status": "accepted",
+    "supersedes": [],
+    "superseded_by": [],
+    "pr": "1"
   }
 ]

@@ -2,7 +2,7 @@
 
 > 由 scripts/docs-gate 从 frontmatter 生成（派生物，勿手改）。规则见 conventions.md。
 
-共 16 条。
+共 17 条。
 
 - [项目定位：即梦 CLI 的 API 包装器与干净安装研究](2026-11-19-1650-project-positioning-wrapper.md) — 2026-11-19T16:50:00+08:00 · decision · accepted · scope: project · keywords: jimeng, installer, wrapper, podman, ghcr
 - [API 兼容面选型：OpenAI 与 DashScope 双一等公民](2026-11-19-1710-api-compatibility-surfaces.md) — 2026-11-19T17:10:00+08:00 · decision · accepted · scope: project · keywords: openai, dashscope, api, async, compatibility
@@ -20,3 +20,4 @@
 - [fetch 异步化缺陷修复与 T8 自测落地（宿主 quirks 链）](2026-11-20-1314-fetch-async-t8-quirks.md) — 2026-11-20T13:14:00+08:00 · change · accepted · scope: project · keywords: fetch, async, event-loop, sigterm, t8, caddy, rootless, slirp4netns, aardvark
 - [项 1 负例用户实测记录与终态标记修正](2026-11-20-1400-selinux-negative-execution-record.md) — 2026-11-20T14:00:00+08:00 · change · accepted · scope: project · keywords: selinux, negative, execution-record, fatal, config-read, terminal-marker
 - [quadlet 双栈 bind 冲突修复与项 1 正负例用户实测 PASS 记录](2026-11-20-1416-quadlet-bind-conflict-fix.md) — 2026-11-20T14:16:00+08:00 · change · accepted · scope: project · keywords: quadlet, publishport, dual-stack, bind-conflict, execution-record
+- [项 2 复跑 v6 reset 根因：容器仅 IPv4 监听；服务改双栈 ::](2026-11-20-1430-dualstack-listen-fix.md) — 2026-11-20T14:30:00+08:00 · change · accepted · scope: project · keywords: dual-stack, ipv6, pasta, listen, quadlet, pull-newer, execution-record
