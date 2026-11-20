@@ -72,8 +72,9 @@ CI 从 frontmatter 生成 `history/INDEX.md` + `INDEX.json`（派生物，勿手
 3. **通过标准**：**具体验证命令 + 期望输出**（注释标明期望值），含负例；禁止只写散文。
    - **证据通道 = 服务自身日志（podman logs）终态标记**（如 fetch error/fetch done/cache hit），
      禁止中间态（fetching/running）作拒绝证据；AVC/readyz 等侧通道不作主证据。
-   - **等待窗口从代码推导**：定位首个失败操作的位置与时序（如 mkdir 先于下载 → 拒绝秒级出现），
-     加启动竞态余量；不拍脑袋给上限。
+   - **等待窗口从代码推导**：定位首个失败操作的位置与时序（含读与写：config 读先于 fetch 的
+     mkdir 写，两者均先于下载 → 拒绝秒级出现），加启动竞态余量；不拍脑袋给上限。
+   - **终态标记含全部退出路径**（fatal/fetch error/fetch done/cache hit），不得只列单一阶段。
    - **负例隔离**：负例用独立 fresh 目录/卷，绝不复用正例资源（`:Z` 私有 MCS 类别污染会产生
      迷惑中间态——实测教训）。
    - **不可判定记 SKIP+证据命令输出**（如 label 关闭宿主），禁硬期望、禁记 PASS。

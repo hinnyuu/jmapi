@@ -2,7 +2,7 @@
 
 > 由 scripts/docs-gate 从 frontmatter 生成（派生物，勿手改）。规则见 conventions.md。
 
-共 14 条。
+共 15 条。
 
 - [项目定位：即梦 CLI 的 API 包装器与干净安装研究](2026-11-19-1650-project-positioning-wrapper.md) — 2026-11-19T16:50:00+08:00 · decision · accepted · scope: project · keywords: jimeng, installer, wrapper, podman, ghcr
 - [API 兼容面选型：OpenAI 与 DashScope 双一等公民](2026-11-19-1710-api-compatibility-surfaces.md) — 2026-11-19T17:10:00+08:00 · decision · accepted · scope: project · keywords: openai, dashscope, api, async, compatibility
@@ -18,3 +18,4 @@
 - [gitleaks 白名单 schema 缺陷：单数 [allowlist] 才生效](2026-11-20-1122-gitleaks-allowlist-schema-fix.md) — 2026-11-20T11:22:00+08:00 · change · accepted · scope: project · keywords: gitleaks, allowlist, schema, regexTarget, entropy
 - [runbook v3：日志证据通道、fresh 目录负例、REF 字面量、Caddy 拆分](2026-11-20-1310-runbook-v3.md) — 2026-11-20T13:10:00+08:00 · change · accepted · scope: project · keywords: runbook, selinux, fresh-dir, podman-logs, ref-literal, caddy-split
 - [fetch 异步化缺陷修复与 T8 自测落地（宿主 quirks 链）](2026-11-20-1314-fetch-async-t8-quirks.md) — 2026-11-20T13:14:00+08:00 · change · accepted · scope: project · keywords: fetch, async, event-loop, sigterm, t8, caddy, rootless, slirp4netns, aardvark
+- [项 1 负例用户实测记录与终态标记修正](2026-11-20-1400-selinux-negative-execution-record.md) — 2026-11-20T14:00:00+08:00 · change · accepted · scope: project · keywords: selinux, negative, execution-record, fatal, config-read, terminal-marker

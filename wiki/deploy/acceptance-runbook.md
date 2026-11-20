@@ -57,10 +57,11 @@ podman run -d --name jm-res-neg -p 18081:8080 \
   -v /tmp/jm-res-neg/config:/config:ro \
   -v /tmp/jm-res-neg/state:/state \
   -v /tmp/jm-res-neg/output:/output "$IMAGE"
-# 首个写操作为 mkdir /state/cli（fetch.mjs，下载之前）→ 拒绝宿主上证据秒级出现；
+# 首个失败操作在拒绝宿主上为 config 读取（entrypoint 载 /config/config.toml，早于 fetch 的
+# mkdir /state/cli；两者均先于下载）→ 证据秒级出现；容器 fail-closed 退出后日志即完整。
 # 等待仅为容器启动竞态余量，上限 30s
 for i in $(seq 1 15); do
-  podman logs jm-res-neg 2>&1 | grep -qE 'fetch error|fetch done|cache hit' && break
+  podman logs jm-res-neg 2>&1 | grep -qE 'fatal|fetch error|fetch done|cache hit' && break
   sleep 2
 done
 ```
@@ -68,10 +69,10 @@ done
 ### 通过标准（负例）
 
 ```bash
-podman logs jm-res-neg 2>&1 | grep -c 'fetch error'
-# 期望：≥1
+podman logs jm-res-neg 2>&1 | grep -cE '"msg":"(fatal|fetch error)"'
+# 期望：≥1（终态标记；拒绝可能发生在 config 读或 fetch 写阶段，阶段不限）
 podman logs jm-res-neg 2>&1 | grep -icE 'permission|EACCES|denied'
-# 期望：≥1（日志含权限拒绝证据；grounding：同宿主 godoword fresh 目录负例实测 os error 13）
+# 期望：≥1（拒绝证据；grounding：用户 2026-11-20 fresh 目录实测 fatal EACCES config open）
 ```
 
 ### 不可判定分支（仅 label 关闭类宿主）
