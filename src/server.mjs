@@ -1,5 +1,8 @@
 import http from 'node:http';
+import fs from 'node:fs';
 import crypto from 'node:crypto';
+import { resolveSignedFile, contentTypeFor } from './files.mjs';
+import { handleOpenAI } from './routes/openai.mjs';
 
 export function redact(obj) {
   if (Array.isArray(obj)) return obj.map(redact);
@@ -32,7 +35,7 @@ function bearer(req) {
   return h.startsWith('Bearer ') ? h.slice(7) : null;
 }
 
-function sendJson(res, code, body) {
+export function sendJson(res, code, body) {
   const payload = JSON.stringify(body);
   res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': Buffer.byteLength(payload) });
   res.end(payload);
@@ -42,9 +45,60 @@ export function openaiError(code, message, type = 'invalid_request_error', param
   return { error: { message, type, code, param } };
 }
 
-// M0：认证门禁 + 就绪门禁 + 未实现 501；生成路由 M1/M2 接入。
+export function readBody(req, limit) {
+  return new Promise((resolve, reject) => {
+    let size = 0;
+    let aborted = false;
+    const chunks = [];
+    req.on('data', (c) => {
+      if (aborted) return;
+      size += c.length;
+      if (size > limit) {
+        aborted = true;
+        req.resume(); // drain 剩余 body，保持连接可回 413（destroy 会致客户端 fetch failed）
+        reject(Object.assign(new Error('body too large'), { code: 'BODY_TOO_LARGE' }));
+        return;
+      }
+      chunks.push(c);
+    });
+    req.on('end', () => {
+      if (!chunks.length) return resolve({});
+      try {
+        resolve(JSON.parse(Buffer.concat(chunks).toString('utf8')));
+      } catch {
+        reject(Object.assign(new Error('invalid JSON'), { code: 'BAD_JSON' }));
+      }
+    });
+    req.on('error', reject);
+  });
+}
+
+// per-key 分钟窗口限流 + 生成类全局并发闸（2H2G 宿主防 OOM；超限 429）
+export function createGuards(config) {
+  const windows = new Map();
+  let inflight = 0;
+  return {
+    rateOk(key, now = Date.now()) {
+      const w = windows.get(key);
+      if (!w || now - w.start >= 60000) {
+        windows.set(key, { start: now, count: 1 });
+        return true;
+      }
+      w.count += 1;
+      return w.count <= config.rateLimitPerMin;
+    },
+    async acquire() {
+      if (inflight >= config.maxConcurrent) return false;
+      inflight += 1;
+      return true;
+    },
+    release() { inflight = Math.max(0, inflight - 1); },
+  };
+}
+
 export function createBusinessServer({ ctx }) {
-  return http.createServer((req, res) => {
+  const guards = createGuards(ctx.config);
+  return http.createServer(async (req, res) => {
     const url = new URL(req.url, 'http://local');
     const p = url.pathname;
     if (p === '/healthz') return sendJson(res, 200, { status: 'ok' });
@@ -52,14 +106,53 @@ export function createBusinessServer({ ctx }) {
       const st = ctx.fetcher.state;
       return sendJson(res, st.status === 'ready' ? 200 : 503, { status: st.status, message: st.message });
     }
-    if (p.startsWith('/v1/') || p.startsWith('/api/') || p.startsWith('/files/')) {
-      if (!keyMatches(bearer(req), ctx.apiKey)) {
+    if (p.startsWith('/files/')) {
+      const m = /^\/files\/([A-Za-z0-9-]+)\/([A-Za-z0-9._-]+)$/.exec(p);
+      if (!m) return sendJson(res, 404, openaiError('not_found', 'bad file path'));
+      const abs = resolveSignedFile({
+        secret: ctx.apiKey, outputDir: ctx.outputDir, jobId: m[1], name: m[2],
+        exp: url.searchParams.get('exp'), sig: url.searchParams.get('sig'),
+      });
+      if (!abs) return sendJson(res, 403, openaiError('invalid_signature', '签名无效/过期/路径非法', 'authentication_error'));
+      res.writeHead(200, { 'Content-Type': contentTypeFor(m[2]), 'Content-Length': fs.statSync(abs).size });
+      fs.createReadStream(abs).pipe(res);
+      return;
+    }
+    if (p.startsWith('/v1/') || p.startsWith('/api/')) {
+      const key = bearer(req);
+      if (!keyMatches(key, ctx.apiKey)) {
         return sendJson(res, 401, openaiError('invalid_api_key', 'Missing or invalid API key', 'authentication_error'));
       }
       if (ctx.fetcher.state.status !== 'ready') {
         return sendJson(res, 503, openaiError('service_not_ready', 'CLI runtime not ready yet', 'server_error'));
       }
-      return sendJson(res, 501, openaiError('not_implemented', `Endpoint ${p} lands in M1/M2`, 'server_error'));
+      if (!guards.rateOk(key)) {
+        return sendJson(res, 429, openaiError('rate_limit_exceeded', 'per-key 分钟限流', 'rate_limit_error'));
+      }
+      if (p.startsWith('/api/')) {
+        return sendJson(res, 501, openaiError('not_implemented', 'DashScope face lands in M2'));
+      }
+      const isGeneration = req.method === 'POST' && (p === '/v1/images/generations' || p === '/v1/videos');
+      if (isGeneration && !(await guards.acquire())) {
+        return sendJson(res, 429, openaiError('concurrency_limit', '全局生成并发闸', 'rate_limit_error'));
+      }
+      try {
+        let body = {};
+        if (req.method === 'POST') {
+          try {
+            body = await readBody(req, ctx.config.maxBodyBytes);
+          } catch (e) {
+            if (e.code === 'BODY_TOO_LARGE') return sendJson(res, 413, openaiError('body_too_large', '请求体超上限'));
+            return sendJson(res, 400, openaiError('invalid_json', '请求体须为 JSON'));
+          }
+        }
+        const proto = req.headers['x-forwarded-proto'] || 'http';
+        ctx.baseUrl = `${proto}://${req.headers.host}`;
+        await handleOpenAI(req, res, ctx, p, body);
+      } finally {
+        if (isGeneration) guards.release();
+      }
+      return;
     }
     return sendJson(res, 404, openaiError('not_found', `Unknown path ${p}`));
   });
@@ -78,6 +171,7 @@ export function createAdminServer({ ctx }) {
         version: ctx.fetcher.meta?.version ?? null,
         login: login ? { status: login.status, data: login.data } : null,
         config: { dailyCreditCap: ctx.config.dailyCreditCap, capDisabledWarning: ctx.config.capDisabledWarning },
+        creditsToday: ctx.jobs ? ctx.jobs.todayCredits() : null,
       });
     }
     return sendJson(res, 404, { error: { message: `Unknown admin path ${p}` } });

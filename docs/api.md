@@ -14,16 +14,23 @@
 | /v1/*、/api/* | 无 key 401；有 key 未就绪 503；就绪但未实现 501 |
 | admin :8081（容器 loopback，不 publish） | 宿主经 `podman exec jmapi curl -s http://127.0.0.1:8081/admin/status` 访问；返回 cli 就绪态、version（实际 CLI 版本号）、login 态、积分帽配置；M2 落地 login/refresh/reload；LAN 直连须显式 JMAPI_ADMIN_BIND opt-in |
 
-## M1 OpenAI 面（计划形状，落地时更新本文件）
+## M1 OpenAI 面（当前实现）
 
 | 端点 | CLI 映射 | 语义 |
 |---|---|---|
-| GET /v1/models | model list | 模型发现，key 直曝 |
-| POST /v1/images/generations | generate-image --wait | 同步；{model,prompt,size,n}→{created,data:[{url}]}；size→ratio/resolution 翻译 |
-| POST /v1/videos | generate-video（不 wait） | 异步；返回 {id,status:queued}；seconds→duration |
-| GET /v1/videos/{id} | query-result（单次） | {id,status:in_progress\|completed\|failed} |
-| GET /v1/videos/{id}/content | 产物文件 | 签名 URL 或验 key 直服 |
-| POST /v1/audio/speech | generate-audio qwen_tts | {model,input}→音频字节；无 voice 参数（文档写明） |
+| GET /v1/models | model list ×4 类型 | {object:list,data:[{id,object,owned_by:jimeng,kind}]} |
+| POST /v1/images/generations | generate-image --wait imageWaitSeconds(150) | 同步；{model,prompt,size(WxH→最近 ratio),n(1-4)}→{created,data:[{url 签名}]}；response_format 仅 url；超时 504+error.param=jobId（轮询 /v1/jobs/{id}，勿重提） |
+| POST /v1/videos | generate-video（不 wait） | 异步；{model,prompt,seconds(1-15),size}→{id,object:video,status:queued,...} |
+| GET /v1/videos/{id} | query-result --out（单次） | {id,status:queued\|in_progress\|completed\|failed,error} |
+| GET /v1/videos/{id}/content | 产物首文件 | completed 否则 409；video/mp4 流 |
+| GET /v1/jobs/{id} | 任务表 | 通用扩展：{id,kind,status,credits,outputs urls,error} |
+| GET /files/{jobId}/{name}?exp&sig | HMAC 签名 | 免 key（签名即凭证）；过期/篡改/穿越 403 |
+
+错误映射：CLI AUTH/CREDENTIAL/LOGIN → 502 upstream_authentication_required（hint login）；
+INVALID_ARGUMENT → 400；其余 → 502 upstream_error（含 logId）。
+限额：per-key 分钟限流 + 生成类全局并发闸（429）；body 上限 413；坏 JSON 400；
+积分帽 UTC 日界累计 deducted，达上限新提交 429 credit_cap_exceeded（查询不受限）。
+任务表：state/jobs.jsonl append-only + 启动重建（last-wins），崩溃安全。
 
 ## M2 DashScope 面 + 扩展（计划形状）
 

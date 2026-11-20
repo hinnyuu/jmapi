@@ -25,9 +25,15 @@ server.mjs       node:http；8080 业务（**默认 bind :: 双栈**，无 IPv6 
                  未实现端点 501；SIGTERM 优雅退出；日志 JSON 脱敏
 cli.mjs          spawn 缓存二进制 -j；解析 {status,data,error,context} 信封；
                  超时/running 语义透传（不自动重提）
-jobs.mjs         （M1）append-only JSONL ledger + 启动重建索引；task id ↔ thread_id/run_id；
-                 当日 deducted 累计供积分帽
-routes/openai/*  （M1/M2）images/videos/audio/models 翻译层
+jobs.mjs         append-only JSONL ledger（state/jobs.jsonl）+ 启动重建索引（last-wins、
+                 损坏行跳过）；task id ↔ thread_id/run_id；day=UTC 结算日供积分帽累计
+files.mjs        HMAC-SHA256 签名 URL（exp+sig，apiKey 为密钥）；文件名白名单+路径防穿越；
+                 签名即凭证（/files 免 Bearer）；content-type 按扩展名
+routes/openai.mjs models/images 同步/videos 异步/content/jobs 通用；size→最近 ratio；
+                 错误映射 AUTH→502/INVALID_ARGUMENT→400/其余 502+logId；
+                 running≠失败：images 超时 504+jobId 轮询扩展端点
+server.mjs       guards：per-key 分钟窗口限流 + 生成类全局并发闸（429）；readBody 上限 413
+                 （drain 不 destroy）；/files 签名面；/v1 分发；/api 501（M2）
 routes/dashscope/*（M2）异步任务别名层，共享 jobs
 ```
 

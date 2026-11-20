@@ -185,7 +185,7 @@ gh run watch --exit-status   # 或 gh run view --log 判读六断言
 
 ```bash
 # https://jmapi-wan.test:28443（--resolve 指向 EIP，-k）：
-#   /healthz 200；/admin/status 404；/v1/models 401；带 key 501
+#   /healthz 200；/admin/status 404；/v1/models 401；带 key 502（上游未登录映射）
 # http://<EIP>:8080/healthz 与 http://<EIP>:8081/admin/status：000（WAN 不可达）
 ```
 

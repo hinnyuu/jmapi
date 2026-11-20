@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import { computeDemotion, applyDemotion, parseIdMap } from './demote.mjs';
 import { loadConfig, loadApiKey } from './config.mjs';
 import { CliFetcher } from './fetch.mjs';
+import { JobStore } from './jobs.mjs';
 import { execCli } from './cli.mjs';
 import { createBusinessServer, createAdminServer, makeLog } from './server.mjs';
 
@@ -50,7 +51,8 @@ try {
 if (config.capDisabledWarning) log('warning', { message: 'dailyCreditCap=0：积分帽已关闭，公网暴露请自担风险' });
 
 const fetcher = new CliFetcher({ stateDir, log });
-const ctx = { fetcher, apiKey, config, execCli };
+const jobs = new JobStore(stateDir, log);
+const ctx = { fetcher, apiKey, config, execCli, jobs, outputDir, baseUrl: 'http://local' };
 
 const business = createBusinessServer({ ctx });
 const admin = createAdminServer({ ctx });
