@@ -166,6 +166,7 @@ test('script 异步：submit running → /v1/jobs 轮询 settle completed（负�
   const jb = await job.json();
   assert.equal(jb.status, 'completed');
   assert.equal(jb.kind, 'script');
+  assert.equal(jb.error, null);
   const outArgs = seen.filter((a) => a.includes('--out'));
   assert.ok(outArgs.every((a) => a[a.indexOf('--out') + 1].endsWith('.md')), 'script --out 须为 md 文件路径');
 });

@@ -19,7 +19,8 @@
 
 ## in-flight
 
-- M2 PR + CI；live 音频/剧本实测（花积分）待用户批准（残留项）。
+- **M2 live PASS（17 积分=3+5+3+6；DashScope/speech/generations/script 全过，outline.md 200+正文）**；
+  script 落盘三缺陷修复+锚定（history 1932）；runbook 项 5 回写；sign-off 代录 + merge PR #3 + release + 清理。
 
 ## 下一动作
 

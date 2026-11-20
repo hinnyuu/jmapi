@@ -64,6 +64,7 @@ export class JobStore {
     if (patch.status === 'completed' || patch.status === 'failed') {
       next.day = now.slice(0, 10);
     }
+    if (patch.status === 'completed') next.error = null; // 结算成功清除历史落盘重试错误
     return this.append(next);
   }
 

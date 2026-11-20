@@ -50,6 +50,8 @@ INVALID_ARGUMENT → 400；其余 → 502 upstream_error（含 logId）。
 
 DashScope 错误形状 {code,message,request_id}；限流/积分帽同 OpenAI 面（429）。
 script 轮询走 GET /v1/jobs/{id}（kind=script，script result --out 落盘）。
+**落盘语义**：out 目录预建；script --out 为单 md 文件路径；落盘失败≠生成失败
+（in_progress+error.retryable，勿重提）；completed 结算清除 error。
 
 ## 错误信封
 

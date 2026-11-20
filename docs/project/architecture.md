@@ -26,7 +26,9 @@ server.mjs       node:http；8080 业务（**默认 bind :: 双栈**，无 IPv6 
 cli.mjs          spawn 缓存二进制 -j；解析 {status,data,error,context} 信封；
                  超时/running 语义透传（不自动重提）
 jobs.mjs         append-only JSONL ledger（state/jobs.jsonl）+ 启动重建索引（last-wins、
-                 损坏行跳过）；task id ↔ thread_id/run_id；day=UTC 结算日供积分帽累计
+                 损坏行跳过）；task id ↔ thread_id/run_id；day=UTC 结算日供积分帽累计；
+                 ensureOutDir 预建（CLI 不建目录）；isWritePathError 落盘失败可重试语义；
+                 completed 结算清 error
 files.mjs        HMAC-SHA256 签名 URL（exp+sig，apiKey 为密钥）；文件名白名单+路径防穿越；
                  签名即凭证（/files 免 Bearer）；content-type 按扩展名
 routes/openai.mjs models/images 同步/videos 异步/content/jobs 通用；size→最近 ratio；

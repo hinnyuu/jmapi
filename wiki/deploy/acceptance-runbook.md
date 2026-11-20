@@ -243,3 +243,46 @@ images 200+PNG magic；videos queued→completed；content 200+ftyp；creditsTod
 ```bash
 podman rm -f <container>; rm -rf <bind-root> /tmp/live.png /tmp/live.mp4 <sdk-scratch>
 ```
+
+## 项 5：M2 live 实测（DashScope/audio/script，真生成花积分；须用户批准）
+
+### 前置
+
+- 用户批准额度；容器已登录（-e HOME=/state/home）；pr-3+ 镜像。
+
+### 执行（grounding：2026-11-20 实测 PASS，17 积分=3+5+3+6）
+
+```bash
+# DashScope 图像任务
+curl -s -X POST http://<host>:8080/api/v1/services/aigc/text2image/image-synthesis \
+  -H 'Authorization: Bearer <key>' -H 'X-DashScope-Async: enable' -H 'Content-Type: application/json' \
+  -d '{"model":"seedream_5.0_flash","input":{"prompt":"窗台橘猫"},"parameters":{"size":"1792x1024"}}'
+curl -s http://<host>:8080/api/v1/tasks/<task_id> -H 'Authorization: Bearer <key>'
+# 期望 SUCCEEDED + results[].url；取 url 期望 200 + 89504e47
+# speech（voice 接受但忽略）
+curl -s -X POST http://<host>:8080/v1/audio/speech -H 'Authorization: Bearer <key>' \
+  -H 'Content-Type: application/json' -d '{"model":"qwen_tts","input":"你好","voice":"alloy"}' -o /tmp/s.wav
+# 期望 200 audio/wav + RIFF magic
+# generations
+curl -s -X POST http://<host>:8080/v1/audio/generations -H 'Authorization: Bearer <key>' \
+  -H 'Content-Type: application/json' -d '{"model":"seed_audio","prompt":"钢琴伴雨声"}'
+# 期望 200 data[].url；取 url 期望 200 + ID3 magic
+# script outline（script_bird 默认模型可能 >150s，轮询窗口给足 ≥300s）
+curl -s -X POST http://<host>:8080/v1/script/outline -H 'Authorization: Bearer <key>' \
+  -H 'Content-Type: application/json' -d '{"episode_num":3,"idea":"橘猫雨夜归家"}'
+curl -s http://<host>:8080/v1/jobs/<id> -H 'Authorization: Bearer <key>'   # 轮询至 completed
+# 期望 completed + outputs[].url（outline.md）；取 url 期望 200 + markdown 正文
+podman exec <container> curl -s http://127.0.0.1:8081/admin/status   # creditsToday=ledger 合计
+```
+
+### 通过标准
+
+四面全 200 + magic/正文核对；creditsToday 与 ledger 一致（实测 17）；completed 后 error 须为 null。
+**语义锚定**：script --out 为单 md 文件路径（目录致 CLI rename 进自身 old/ EINVAL）；
+落盘失败≠生成失败（in_progress+retryable，勿重提）；out 目录须预建。
+
+### 清理
+
+```bash
+podman rm -f <container>; rm -rf <bind-root> /tmp/s.wav <scratch>
+```

@@ -45,9 +45,11 @@ curl -s http://<lan-host>:8080/v1/audio/speech -H "Authorization: Bearer <你的
 # 音乐/音效（扩展端点）
 curl -s http://<lan-host>:8080/v1/audio/generations -H "Authorization: Bearer <你的 key>" \
   -H 'Content-Type: application/json' -d '{"model":"seed_audio","prompt":"钢琴伴雨声"}'
-# 剧本大纲（结构化，非自由聊天）
+# 剧本大纲（结构化，非自由聊天；script_bird 默认模型可能 >150s，轮询给足 ≥300s）
 curl -s http://<lan-host>:8080/v1/script/outline -H "Authorization: Bearer <你的 key>" \
   -H 'Content-Type: application/json' -d '{"episode_num":3,"idea":"橘猫雨夜归家"}'
+# 轮询 GET /v1/jobs/<id> 至 completed；outputs[].url 取 outline.md
+# 落盘失败≠生成失败：error.retryable=true 时继续轮询同 job，勿重复提交
 ```
 
 ## 健康与就绪（M0 起）
