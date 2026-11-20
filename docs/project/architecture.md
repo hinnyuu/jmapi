@@ -14,6 +14,7 @@ fetch.mjs        cache-first：缓存 inner-sha 复验命中 → 零网络；否
                  --package-file 校验解包（--prefix/--bin-dir/--skills-dir 缓存内、
                  --no-modify-path、遥测关）→ meta.json{version(内层包名解析),bundle,
                  release(带 sha12 后缀的实际目录名),innerSha,fetchedAt}；
+                 **全异步子进程**（事件循环自由：fetch 期间 healthz/readyz 可响应、SIGTERM 有效）；
                  离线：JMAPI_CLI_INSTALLER_FILE / JMAPI_CLI_PACKAGE_FILE bind；
                  钉版：JMAPI_CLI_PACKAGE_URL + JMAPI_CLI_SHA256；刷新：JMAPI_CLI_REFRESH=1
 server.mjs       node:http；8080 业务 + 8081 admin（容器内 loopback，不 publish，

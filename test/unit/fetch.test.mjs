@@ -38,6 +38,21 @@ test('checksums 被篡改 → 拒绝（负例）', () => {
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
+test('fetch 期间事件循环不被阻塞（响应性锚定：旧 execFileSync 实现必红）', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'jm-fetch-'));
+  const state = path.join(dir, 'state');
+  const { outer } = buildOuter(dir);
+  const installer = path.join(dir, 'slow-install.sh');
+  fs.writeFileSync(installer, '#!/bin/sh\nsleep 1\nexit 0\n');
+  fs.chmodSync(installer, 0o755);
+  const f = new CliFetcher({ stateDir: state, env: { JMAPI_CLI_INSTALLER_FILE: installer, JMAPI_CLI_PACKAGE_FILE: outer } });
+  let tick = false;
+  setTimeout(() => { tick = true; }, 50);
+  await f.ensureReady().catch(() => {});
+  assert.equal(tick, true, 'fetch 子进程等待期间定时器须能触发（事件循环自由）');
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
 test('cache-first：无缓存不命中；meta+包+release 齐备且 sha 一致才命中', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'jm-fetch-'));
   const state = path.join(dir, 'state');

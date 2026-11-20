@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import zlib from 'node:zlib';
-import { execFileSync, spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 
 const INNER_RE = /^jimeng-novel-([0-9.]+)-linux-amd64\.tar\.gz$/;
 
@@ -35,10 +35,25 @@ function grepPackageUrl(installerPath) {
   return m[1];
 }
 
+// 异步子进程：execFileSync 会阻塞事件循环，fetch 期间 HTTP 与 SIGTERM 全死（实测缺陷）
+function run(cmd, args, { env = process.env, timeoutMs = 300000 } = {}) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(cmd, args, { env, stdio: ['ignore', 'ignore', 'pipe'] });
+    let err = '';
+    const timer = setTimeout(() => child.kill('SIGKILL'), timeoutMs);
+    child.stderr.on('data', (d) => { err += d; });
+    child.on('error', (e) => { clearTimeout(timer); reject(e); });
+    child.on('close', (code) => {
+      clearTimeout(timer);
+      if (code === 0) resolve();
+      else reject(new Error(`${cmd} exit ${code}: ${err.slice(0, 500)}`));
+    });
+  });
+}
+
 function curl(url, dest) {
-  execFileSync('curl', ['-q', '--fail', '--silent', '--show-error', '--location', '--proto', '=https',
-    '--proto-redir', '=https', '--connect-timeout', '15', '--max-time', '300', '--retry', '2', url, '--output', dest],
-  { stdio: ['ignore', 'ignore', 'inherit'] });
+  return run('curl', ['-q', '--fail', '--silent', '--show-error', '--location', '--proto', '=https',
+    '--proto-redir', '=https', '--connect-timeout', '15', '--max-time', '300', '--retry', '2', url, '--output', dest]);
 }
 
 export class CliFetcher {
@@ -80,13 +95,13 @@ export class CliFetcher {
       if (!installer) {
         if (!this.env.JMAPI_CLI_SOURCE) throw new Error('缺少 JMAPI_CLI_SOURCE（或离线 JMAPI_CLI_INSTALLER_FILE/JMAPI_CLI_PACKAGE_FILE）');
         installer = path.join(tmp, 'install.sh');
-        curl(this.env.JMAPI_CLI_SOURCE, installer);
+        await curl(this.env.JMAPI_CLI_SOURCE, installer);
       }
       let outer = this.env.JMAPI_CLI_PACKAGE_FILE;
       if (!outer) {
         const url = this.env.JMAPI_CLI_PACKAGE_URL || grepPackageUrl(installer);
         outer = path.join(tmp, 'package.tar.gz');
-        curl(url, outer);
+        await curl(url, outer);
       }
       const inner = readInnerFromOuter(outer);
       if (this.env.JMAPI_CLI_SHA256 && this.env.JMAPI_CLI_SHA256.toLowerCase() !== inner.sha) {
@@ -94,10 +109,10 @@ export class CliFetcher {
       }
       fs.copyFileSync(outer, this.outerPath);
       const bundle = inner.name.replace(/\.tar\.gz$/, '');
-      spawnSync('bash', [installer, '--package-file', this.outerPath,
+      await run('bash', [installer, '--package-file', this.outerPath,
         '--prefix', path.join(this.dir, 'app'), '--bin-dir', path.join(this.dir, 'bin'),
         '--skills-dir', path.join(this.dir, 'skills'), '--no-modify-path'],
-      { stdio: 'inherit', env: { ...this.env, JIMENG_NOVEL_DISABLE_TELEMETRY: '1', METRICS_LOG_LEVEL: 'none' }, timeout: 300000 });
+      { env: { ...this.env, JIMENG_NOVEL_DISABLE_TELEMETRY: '1', METRICS_LOG_LEVEL: 'none' } });
       // 安装器 release 目录名带 sha12 后缀（<bundle>-<sha12>），以实际目录名入 meta
       const relRoot = path.join(this.dir, 'app', 'releases');
       const release = fs.existsSync(relRoot) ? fs.readdirSync(relRoot).find((n) => n.startsWith(`${bundle}-`)) : null;
