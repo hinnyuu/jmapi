@@ -36,10 +36,13 @@ podman run -d --name jmapi \
 M0 阶段在容器内执行 CLI（凭据落 /state）：
 
 ```bash
-podman exec -it jmapi /state/cli/bin/jimeng-novel login --non-interactive -j
+podman exec -e HOME=/state/home -it jmapi /state/cli/bin/jimeng-novel login --non-interactive -j
 # 浏览器打开返回的 verificationUriComplete 确认授权，然后：
-podman exec -it jmapi /state/cli/bin/jimeng-novel login --wait --device-code '<deviceCode>' --timeout 600s -j
+podman exec -e HOME=/state/home -it jmapi /state/cli/bin/jimeng-novel login --wait --device-code '<deviceCode>' --timeout 600s -j
 ```
+
+**HOME 必须显式 /state/home**：CLI 凭据落 $HOME/.local/share/…，exec 默认 HOME=/root
+（临时层）会致重启丢登录态（实测缺陷，entrypoint 已统一服务侧 HOME）。
 
 M2 起 admin 面提供等价端点。admin 只绑**容器内** loopback（不 publish），宿主访问：
 

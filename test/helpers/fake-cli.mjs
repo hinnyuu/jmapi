@@ -10,7 +10,8 @@ const read = (n) => fs.readFileSync(path.join(fixtures, n), 'utf8');
 const [cmd, sub] = args;
 
 let out;
-if (cmd === 'status') out = read('status.json');
+if (cmd === 'home-probe') out = JSON.stringify({ status: 'success', data: { home: process.env.HOME } });
+else if (cmd === 'status') out = read('status.json');
 else if (cmd === 'model' && sub === 'describe') out = read('error.json');
 else if (cmd === 'query-result') {
   out = process.env.FAKE_MODE === 'running'

@@ -43,7 +43,7 @@ routes/dashscope/*（M2）异步任务别名层，共享 jobs
 | 挂载 | 模式 | 内容 |
 |---|---|---|
 | /config | ro + :Z | config.toml（operator 宿主编辑） |
-| /state | rw + :Z | cli/ 缓存+meta、凭据（CLI 自管）、jobs ledger |
+| /state | rw + :Z | cli/ 缓存+meta、**home/（CLI HOME，凭据落此，重启不丢）**、jobs ledger |
 | /output | rw + :Z | 生成产物（--out 落盘，run_id-assetId 命名，从不覆盖） |
 
 命名卷为 rootful/回退选项；凭据目录禁止多容器共享。

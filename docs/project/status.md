@@ -21,8 +21,9 @@
 
 ## in-flight
 
-- live 实测首轮：images 成功（3 积分）但 videos.create 400 → **SDK 发 multipart**（OpenAI 真实
-  端点形态）→ multipart 纯字段解析已实现+契约负例（46/46）；待新 pr-2 镜像重跑 live → sign-off → merge。
+- live 实测抓两缺陷已修：SDK multipart 形态（readBody 双解析）+ 凭据 HOME 落 state/home
+  （entrypoint 统一+exec -e HOME；history 1710）；47 测试绿待验；待新镜像+用户重新授权+重跑 live
+  → runbook live 段回写 → sign-off → merge。
 
 ## 下一动作
 
