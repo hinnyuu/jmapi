@@ -3,6 +3,9 @@ import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { resolveSignedFile, contentTypeFor } from './files.mjs';
 import { handleOpenAI } from './routes/openai.mjs';
+import { handleDashScope } from './routes/dashscope.mjs';
+import { handleAudio } from './routes/audio.mjs';
+import { handleScript } from './routes/script.mjs';
 
 export function redact(obj) {
   if (Array.isArray(obj)) return obj.map(redact);
@@ -168,9 +171,21 @@ export function createBusinessServer({ ctx }) {
         return sendJson(res, 429, openaiError('rate_limit_exceeded', 'per-key 分钟限流', 'rate_limit_error'));
       }
       if (p.startsWith('/api/')) {
-        return sendJson(res, 501, openaiError('not_implemented', 'DashScope face lands in M2'));
+        let body = {};
+        if (req.method === 'POST') {
+          try {
+            body = await readBody(req, ctx.config.maxBodyBytes);
+          } catch (e) {
+            if (e.code === 'BODY_TOO_LARGE') return sendJson(res, 413, { code: 'InvalidParameter', message: '请求体超上限', request_id: null });
+            return sendJson(res, 400, { code: 'InvalidParameter', message: '请求体须为 JSON', request_id: null });
+          }
+        }
+        const proto = req.headers['x-forwarded-proto'] || 'http';
+        ctx.baseUrl = `${proto}://${req.headers.host}`;
+        return handleDashScope(req, res, ctx, p, body);
       }
-      const isGeneration = req.method === 'POST' && (p === '/v1/images/generations' || p === '/v1/videos');
+      const isGeneration = req.method === 'POST' && (p === '/v1/images/generations' || p === '/v1/videos'
+        || p === '/v1/audio/speech' || p === '/v1/audio/generations' || p.startsWith('/v1/script/'));
       if (isGeneration && !(await guards.acquire())) {
         return sendJson(res, 429, openaiError('concurrency_limit', '全局生成并发闸', 'rate_limit_error'));
       }
@@ -187,6 +202,8 @@ export function createBusinessServer({ ctx }) {
         }
         const proto = req.headers['x-forwarded-proto'] || 'http';
         ctx.baseUrl = `${proto}://${req.headers.host}`;
+        if (p.startsWith('/v1/audio/')) return await handleAudio(req, res, ctx, p, body);
+        if (p.startsWith('/v1/script/')) return await handleScript(req, res, ctx, p, body);
         await handleOpenAI(req, res, ctx, p, body);
       } finally {
         if (isGeneration) guards.release();
@@ -212,6 +229,38 @@ export function createAdminServer({ ctx }) {
         config: { dailyCreditCap: ctx.config.dailyCreditCap, capDisabledWarning: ctx.config.capDisabledWarning },
         creditsToday: ctx.jobs ? ctx.jobs.todayCredits() : null,
       });
+    }
+    if (req.method === 'POST' && p === '/admin/login') {
+      const env = await ctx.execCli(ctx.fetcher.binary, ['login', '--non-interactive'], { timeoutMs: 60000 });
+      return sendJson(res, env.status === 'error' ? 502 : 200, env);
+    }
+    if (req.method === 'POST' && p === '/admin/login/wait') {
+      let body = {};
+      try { body = await readBody(req, ctx.config.maxBodyBytes); } catch { return sendJson(res, 400, { error: { message: 'bad json' } }); }
+      if (!body.deviceCode) return sendJson(res, 400, { error: { message: 'deviceCode 必填' } });
+      const env = await ctx.execCli(ctx.fetcher.binary, ['login', '--wait', '--device-code', String(body.deviceCode),
+        '--timeout', String(body.timeout || '600s')], { timeoutMs: 660000 });
+      return sendJson(res, env.status === 'error' ? 502 : 200, env);
+    }
+    if (req.method === 'POST' && p === '/admin/cli/refresh') {
+      const saved = ctx.fetcher.env;
+      ctx.fetcher.env = { ...process.env, JMAPI_CLI_REFRESH: '1' };
+      try {
+        await ctx.fetcher.ensureReady();
+      } catch (e) {
+        return sendJson(res, 502, { error: { message: String(e.message || e) } });
+      } finally {
+        ctx.fetcher.env = saved;
+      }
+      return sendJson(res, 200, { cli: ctx.fetcher.state, version: ctx.fetcher.meta?.version ?? null });
+    }
+    if (req.method === 'POST' && p === '/admin/config/reload') {
+      try {
+        ctx.reloadConfig();
+      } catch (e) {
+        return sendJson(res, 400, { error: { message: String(e.message || e) } });
+      }
+      return sendJson(res, 200, { config: { dailyCreditCap: ctx.config.dailyCreditCap } });
     }
     return sendJson(res, 404, { error: { message: `Unknown admin path ${p}` } });
   });

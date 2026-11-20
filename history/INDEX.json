@@ -434,5 +434,26 @@
     "supersedes": [],
     "superseded_by": [],
     "pr": "2"
+  },
+  {
+    "file": "2026-11-20-1932-m2-live-pass-record.md",
+    "title": "M2 live 实测 PASS（17 积分）与 script 落盘三缺陷修复记录",
+    "date": "2026-11-20T19:32:00+08:00",
+    "keywords": [
+      "m2-live",
+      "pass",
+      "credits",
+      "script-out-file",
+      "write-error-semantics",
+      "runbook-grounding"
+    ],
+    "scope": [
+      "project"
+    ],
+    "type": "change",
+    "status": "accepted",
+    "supersedes": [],
+    "superseded_by": [],
+    "pr": "3"
   }
 ]

@@ -2,7 +2,7 @@
 
 > 由 scripts/docs-gate 从 frontmatter 生成（派生物，勿手改）。规则见 conventions.md。
 
-共 21 条。
+共 22 条。
 
 - [项目定位：即梦 CLI 的 API 包装器与干净安装研究](2026-11-19-1650-project-positioning-wrapper.md) — 2026-11-19T16:50:00+08:00 · decision · accepted · scope: project · keywords: jimeng, installer, wrapper, podman, ghcr
 - [API 兼容面选型：OpenAI 与 DashScope 双一等公民](2026-11-19-1710-api-compatibility-surfaces.md) — 2026-11-19T17:10:00+08:00 · decision · accepted · scope: project · keywords: openai, dashscope, api, async, compatibility
@@ -25,3 +25,4 @@
 - [项 3 v4：开发机宿主 + 高位端口 + CI 外部视角（含起栈两坑）](2026-11-20-1515-item3-v4-devvm-highport.md) — 2026-11-20T15:15:00+08:00 · change · accepted · scope: project · keywords: item3, wan, high-port, tls-internal, hairpin, acceptance-wan, caddy-bind
 - [live 实测两缺陷：SDK multipart 形态与凭据 HOME 落点](2026-11-20-1710-live-multipart-home-fix.md) — 2026-11-20T17:10:00+08:00 · change · accepted · scope: project · keywords: credentials, home, state-bind, restart, multipart, sdk, live-test
 - [M1 live SDK 实测 PASS 记录（30 积分）与 runbook 项 4 回写](2026-11-20-1735-live-pass-record.md) — 2026-11-20T17:35:00+08:00 · change · accepted · scope: project · keywords: live-test, sdk, pass, credits, runbook-grounding
+- [M2 live 实测 PASS（17 积分）与 script 落盘三缺陷修复记录](2026-11-20-1932-m2-live-pass-record.md) — 2026-11-20T19:32:00+08:00 · change · accepted · scope: project · keywords: m2-live, pass, credits, script-out-file, write-error-semantics, runbook-grounding

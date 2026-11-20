@@ -32,15 +32,26 @@ INVALID_ARGUMENT → 400；其余 → 502 upstream_error（含 logId）。
 积分帽 UTC 日界累计 deducted，达上限新提交 429 credit_cap_exceeded（查询不受限）。
 任务表：state/jobs.jsonl append-only + 启动重建（last-wins），崩溃安全。
 
-## M2 DashScope 面 + 扩展（计划形状）
+## M2 DashScope 面 + 音频/剧本 + admin（当前实现）
 
 | 端点 | 语义 |
 |---|---|
-| POST /api/v1/services/aigc/text2image/image-synthesis | Header `X-DashScope-Async: enable` → {output:{task_id,task_status}} |
-| POST /api/v1/services/aigc/video-generation/video-synthesis | 同上，共享任务表 |
-| GET /api/v1/tasks/{task_id} | {output:{task_status,SUCCEEDED\|FAILED\|RUNNING,results}} |
-| POST /v1/audio/generations（扩展） | seed_audio 音乐/音效 |
-| POST /v1/script/outline、/v1/script/episode | 结构化剧本（封闭 schema：episode_num/idea/characters…），异步任务 |
+| POST /api/v1/services/aigc/text2image/image-synthesis | 须 `X-DashScope-Async: enable`（缺 400）；{model,input:{prompt},parameters:{size}}→{output:{task_id,task_status}}；图像同步完成即 SUCCEEDED |
+| POST /api/v1/services/aigc/video-generation/video-synthesis | 同上；parameters:{duration,size}；PENDING/RUNNING→查询 SUCCEEDED |
+| GET /api/v1/tasks/{task_id} | {output:{task_status,results:[{url 签名}]},usage:{credits}}；共享 OpenAI 面任务表 |
+| POST /v1/audio/speech | OpenAI 形状 {model:qwen_tts,input,voice(接受但忽略，无音色控制)}→音频字节流（wav）；超时 504+jobId |
+| POST /v1/audio/generations | 扩展：seed_audio 音乐/音效 {prompt,sample_rate?}→{created,data:[{url}]} |
+| POST /v1/script/outline | {episode_num(1-100),idea,ref_content?,model_key?}→{id,kind,status,outputs urls}；隐藏绑定目录 state/script 自动 init |
+| POST /v1/script/episode | {characters,current_episode,current_episode_summary,history_summary?,future_summary?,model_key?} |
+| admin POST /admin/login | 非交互授权挑战（loopback/LAN only） |
+| admin POST /admin/login/wait | {deviceCode,timeout?}→登录交换 |
+| admin POST /admin/cli/refresh | 显式刷新 CLI 缓存（JMAPI_CLI_REFRESH 语义） |
+| admin POST /admin/config/reload | 热重载 config.toml（同 SIGHUP） |
+
+DashScope 错误形状 {code,message,request_id}；限流/积分帽同 OpenAI 面（429）。
+script 轮询走 GET /v1/jobs/{id}（kind=script，script result --out 落盘）。
+**落盘语义**：out 目录预建；script --out 为单 md 文件路径；落盘失败≠生成失败
+（in_progress+error.retryable，勿重提）；completed 结算清除 error。
 
 ## 错误信封
 

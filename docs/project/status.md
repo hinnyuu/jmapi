@@ -7,22 +7,20 @@
 
 ## 当前里程碑
 
-**M1 OpenAI 面核心**（见 [roadmap](roadmap.md)）。M0 已 squash merge（e9d7972）+ release 绿
-（main 镜像 latest/sha + same-tree 重冒烟）；三项残留验收全 PASS（sign-off 代录评论在 PR #1）。
+**M2 DashScope 面+音频/剧本+admin**（见 [roadmap](roadmap.md)）。M0/M1 已 merge + release 绿
+（M1 live PASS 30 积分，sign-off 代录在 PR #2）。
 
-## done（M1）
+## done（M2）
 
-- src/jobs.mjs（JSONL ledger+重建+UTC 积分帽累计）、src/files.mjs（HMAC 签名 URL+防穿越）、
-  src/routes/openai.mjs（models/images 同步/videos 异步/content/jobs 扩展+错误映射）、
-  server guards（限流/并发闸/413 drain）；entrypoint 注入 JobStore/outputDir。
-- 45/45 单元契约测试（签名端到端、积分帽/限流/并发/坏 body/穿越/过期负例）；lint 0。
-- smoke T1/T8 与 ci wan/acceptance-wan/runbook 的 501 期望同步为 502（上游未登录映射）。
-- docs/api.md、architecture.md、wiki/user/api.md 同步 M1 当前事实。
+- routes/dashscope（异步任务面共享 jobs、X-DashScope-Async 强制）、routes/audio（speech qwen_tts
+  流式 wav/generations seed_audio）、routes/script（隐藏绑定 state/script + execCli cwd）、
+  admin login/wait/refresh/reload。
+- 54/54 契约测试（DashScope/audio/script/admin 正负例）；lint 0；docs/api+architecture+wiki 同步。
 
 ## in-flight
 
-- **live 实测 PASS（30 积分：3+3+24；models 35/images PNG/videos completed/content ftyp）**；
-  runbook 项 4 已 grounding 回写；sign-off 代录 + squash merge PR #2 + release 重冒烟 + 清理 live 栈。
+- **M2 live PASS（17 积分=3+5+3+6；DashScope/speech/generations/script 全过，outline.md 200+正文）**；
+  script 落盘三缺陷修复+锚定（history 1932）；runbook 项 5 回写；sign-off 代录 + merge PR #3 + release + 清理。
 
 ## 下一动作
 

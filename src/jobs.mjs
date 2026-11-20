@@ -2,6 +2,18 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
+// CLI --out 目录须预先存在（CLI 不建目录，实测）；统一建目录防落盘失败
+export function ensureOutDir(ctx, jobId) {
+  const d = path.join(ctx.outputDir, jobId);
+  fs.mkdirSync(d, { recursive: true });
+  return d + '/';
+}
+
+// 落盘失败≠生成失败：上游已扣费完成，仅本地写路径问题，可重试（CLI hint 明示勿重提）
+export function isWritePathError(env) {
+  return env?.error?.code === 'COMMAND_FAILED' && /succeeded but cannot write/.test(env.error?.message || '');
+}
+
 // append-only JSONL ledger：单写者追加、启动重建索引（last-wins），崩溃安全、零 DB 依赖。
 export class JobStore {
   constructor(dir, log = () => {}) {
@@ -52,6 +64,7 @@ export class JobStore {
     if (patch.status === 'completed' || patch.status === 'failed') {
       next.day = now.slice(0, 10);
     }
+    if (patch.status === 'completed') next.error = null; // 结算成功清除历史落盘重试错误
     return this.append(next);
   }
 

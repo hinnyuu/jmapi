@@ -24,15 +24,32 @@ vid = client.videos.create(model="Seedance_2.0_mini",
 videos.create 兼容官方 SDK 的 multipart 形态（纯字段）；参考图上传（input_reference）M1 不支持（400）。
 积分帽默认 500/天（UTC），达上限新提交 429；查询不受限。
 
-## DashScope 风格（M2 起）
+## DashScope 风格（M2 起可用）
 
 ```bash
 curl -s http://<lan-host>:8080/api/v1/services/aigc/video-generation/video-synthesis \
   -H "Authorization: Bearer <你的 key>" -H "X-DashScope-Async: enable" \
   -H "Content-Type: application/json" \
-  -d '{"model":"Seedance_2.0_mini","input":{"prompt":"橘猫转头"},"parameters":{"duration":4,"resolution":"480p"}}'
+  -d '{"model":"Seedance_2.0_mini","input":{"prompt":"橘猫转头"},"parameters":{"duration":4,"size":"854x480"}}'
 # → {"output":{"task_id":"...","task_status":"PENDING"}}
 curl -s http://<lan-host>:8080/api/v1/tasks/<task_id> -H "Authorization: Bearer <你的 key>"
+# → SUCCEEDED 后 output.results[].url 为签名 URL
+```
+
+## 音频与剧本（M2 起可用）
+
+```bash
+# TTS（OpenAI speech 形状；voice 接受但忽略——qwen_tts 无音色控制）
+curl -s http://<lan-host>:8080/v1/audio/speech -H "Authorization: Bearer <你的 key>" \
+  -H 'Content-Type: application/json' -d '{"model":"qwen_tts","input":"你好，世界"}' -o out.wav
+# 音乐/音效（扩展端点）
+curl -s http://<lan-host>:8080/v1/audio/generations -H "Authorization: Bearer <你的 key>" \
+  -H 'Content-Type: application/json' -d '{"model":"seed_audio","prompt":"钢琴伴雨声"}'
+# 剧本大纲（结构化，非自由聊天；script_bird 默认模型可能 >150s，轮询给足 ≥300s）
+curl -s http://<lan-host>:8080/v1/script/outline -H "Authorization: Bearer <你的 key>" \
+  -H 'Content-Type: application/json' -d '{"episode_num":3,"idea":"橘猫雨夜归家"}'
+# 轮询 GET /v1/jobs/<id> 至 completed；outputs[].url 取 outline.md
+# 落盘失败≠生成失败：error.retryable=true 时继续轮询同 job，勿重复提交
 ```
 
 ## 健康与就绪（M0 起）
