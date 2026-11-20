@@ -37,7 +37,8 @@ PR #1 mergeable，BLOCKED 仅待人工 approve（分支保护设计如此）。
   容器仅 IPv4 监听 vs pasta v6 转发 → 服务默认双栈 :: + Pull=newer（history 1430）；
   **项 2 复跑完全成功、已清理（用户报告）**；借鉴须读全后果段前提升格铁律（conventions 借鉴纪律）。
   项 3 v4：宿主切开发机 + 28443 高位 + tls internal + CI acceptance-wan 外部视角（用户已开端口）；
-  栈已起（jm-wan-api/caddy），本地 TLS  sanity 200/404/401；待 CI 六断言 → 清理 → 关端口 → sign-off + approve。
+  栈已起（jm-wan-api/caddy），本地 TLS sanity 200/404/401；dispatch 需默认分支限制 →
+  WAN 六断言改 ci.yaml wan job（vars 门控，已设 WAN_TARGET_IP/WAN_TLS_PORT）；十九轮 CI 含 wan。
 - 仓库设置落地：分支保护（6 checks+1 approve+enforce_admins）、squash-only、secret scanning+push protection。
 - uhub node:22-slim 已添加并 pull 验证；temp 阵地已退役（用户确认，仅删自有两目录）。
 

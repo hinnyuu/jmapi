@@ -33,8 +33,10 @@ CI 与本地预检聚合校验；新文件未登记 → 红（防图谱腐烂）
    （caddy 容器 + tls internal 自签 + loopback：admin 404/healthz 200/401/501；CI 钉版
    caddy:2-alpine，本机 uhub 镜像）。资源隔离+自动清理，失败先 dump 自有容器日志（含临时用户侧）再清理。
 7. **release**：main 推 `:latest`+sha，tag 推 semver；**merge 后对 main 镜像重跑冒烟**（same-tree）。
-8. **acceptance-wan（manual）**：项 3 WAN 暴露面六断言，GitHub runner 外部视角；
-   workflow_dispatch 输入经 env + 格式校验（IP/端口/域名）；非 required check，验收期手动触发。
+8. **WAN 六断言（外部视角）**：merge 前由 ci.yaml `wan` job 承担（repo 变量 WAN_TARGET_IP
+   非空才跑，验收期临时设置、测毕删除）；merge 后 acceptance-wan.yaml 可 workflow_dispatch
+   重复执行（dispatch 要求 workflow 存在于默认分支，merge 前不可触发，实测）。
+   输入经 env + 格式校验（IP/端口/域名）；非 required check。
 
 main 分支保护 required checks：commitlint、secrets、docs-gate、node、image、smoke + 人工 approve。
 
