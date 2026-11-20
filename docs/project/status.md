@@ -28,8 +28,10 @@ PR #1 mergeable，BLOCKED 仅待人工 approve（分支保护设计如此）。
   （wiki/deploy/acceptance-runbook.md）+ PR 正文重写（history 2026-11-20-1111）。
 - 九轮 secrets 红 → gitleaks 白名单 schema 缺陷（复数被忽略/regexTarget/熵阈值假绿）
   修复 + 负例锚定（history 2026-11-20-1122）；十轮 secrets 绿。
-- 十轮 smoke T1 healthz 15s 窗口在慢 runner 上假红 → 轮询上限提 60s；**十一轮六 job 全绿**。
-- M0 机器侧完毕：PR #1 mergeable，仅待人工 runbook sign-off + approve（分支保护设计）。
+- 十轮 smoke T1 healthz 15s 窗口在慢 runner 上假红 → 轮询上限提 60s；**十一、十二轮六 job 全绿**。
+- 用户 PR 评论三缺陷 → runbook v3（logs 证据/fresh 负例/REF 字面量/Caddy 拆分，history 1310）；
+  T8 落地抓 fetch 事件循环阻塞真缺陷（异步化+响应性负例）与宿主 quirks 链（history 1314）；
+  **本机 smoke 19/19 全绿含 T8 自签 TLS**；十三轮 CI 进行中。
 - 仓库设置落地：分支保护（6 checks+1 approve+enforce_admins）、squash-only、secret scanning+push protection。
 - uhub node:22-slim 已添加并 pull 验证；temp 阵地已退役（用户确认，仅删自有两目录）。
 

@@ -241,5 +241,50 @@
     "supersedes": [],
     "superseded_by": [],
     "pr": "1"
+  },
+  {
+    "file": "2026-11-20-1310-runbook-v3.md",
+    "title": "runbook v3：日志证据通道、fresh 目录负例、REF 字面量、Caddy 拆分",
+    "date": "2026-11-20T13:10:00+08:00",
+    "keywords": [
+      "runbook",
+      "selinux",
+      "fresh-dir",
+      "podman-logs",
+      "ref-literal",
+      "caddy-split"
+    ],
+    "scope": [
+      "project"
+    ],
+    "type": "change",
+    "status": "accepted",
+    "supersedes": [],
+    "superseded_by": [],
+    "pr": "1"
+  },
+  {
+    "file": "2026-11-20-1314-fetch-async-t8-quirks.md",
+    "title": "fetch 异步化缺陷修复与 T8 自测落地（宿主 quirks 链）",
+    "date": "2026-11-20T13:14:00+08:00",
+    "keywords": [
+      "fetch",
+      "async",
+      "event-loop",
+      "sigterm",
+      "t8",
+      "caddy",
+      "rootless",
+      "slirp4netns",
+      "aardvark"
+    ],
+    "scope": [
+      "project"
+    ],
+    "type": "change",
+    "status": "accepted",
+    "supersedes": [],
+    "superseded_by": [],
+    "pr": "1"
   }
 ]
