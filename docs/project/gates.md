@@ -26,7 +26,8 @@ CI 与本地预检聚合校验；新文件未登记 → 红（防图谱腐烂）
 6. **容器冒烟**：`scripts/acceptance/smoke.sh`，podman rootless
    （ubuntu 24.04 须 `sysctl kernel.apparmor_restrict_unprivileged_userns=0`，仅 CI 临时环境）；
    覆盖 healthz/readyz、401/501、config ro、bind 属主、uid/卷矩阵、删容器重建缓存命中、优雅退出；
-   uid 断言读 `/proc/1/status`（exec 是新进程，不继承 entrypoint 降权）；healthz 轮询防启动竞态；
+   uid 断言读 `/proc/1/status`（exec 是新进程，不继承 entrypoint 降权）；healthz 轮询上限 60s
+   （慢 runner 容器启动可超 15s，实证）防启动竞态；
    切换用户的 podman 包装器显式 HOME+XDG 三件套（runuser 保留调用者环境，防 XDG_CONFIG_HOME 泄漏）；
    full 矩阵追加 rootful+bind、非 1000 uid（CI 临时用户）、docker+bind。资源隔离+自动清理，
    失败先 dump 自有容器日志（含临时用户侧）再清理。

@@ -229,7 +229,7 @@ fi
 PORT1="$(pick_port)" || exit 1
 BASE1="http://127.0.0.1:${PORT1}"
 start_container as_podman "${TAG}-t1" "$PORT1" "${B1}/state" "${B1}/config" "${B1}/output"
-assert_eq "T1 healthz 恒 200" "200" "$(wait_http "${BASE1}/healthz" 15)"
+assert_eq "T1 healthz 恒 200" "200" "$(wait_http "${BASE1}/healthz" 60)"
 check_ready "T1" "$BASE1" 180
 assert_eq "T1 /v1/models 无 key 401" "401" "$(http_code "${BASE1}/v1/models")"
 assert_contains "T1 401 OpenAI 错误信封" "$(curl -s --max-time 6 "${BASE1}/v1/models")" '"error"'
