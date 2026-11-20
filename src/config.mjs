@@ -7,6 +7,7 @@ export const DEFAULTS = {
   maxConcurrent: 4,
   maxBodyBytes: 10 * 1024 * 1024,
   fileUrlTtlSeconds: 3600,
+  imageWaitSeconds: 150,
   // 双栈监听：pasta 等转发器把宿主 v6 指向容器 v6 socket，仅 0.0.0.0 会致 v6 reset（实测）
   bind: '::',
   port: 8080,
@@ -20,6 +21,7 @@ const ENV_MAP = {
   JMAPI_MAX_CONCURRENT: 'maxConcurrent',
   JMAPI_MAX_BODY_BYTES: 'maxBodyBytes',
   JMAPI_FILE_URL_TTL_SECONDS: 'fileUrlTtlSeconds',
+  JMAPI_IMAGE_WAIT_SECONDS: 'imageWaitSeconds',
   JMAPI_BIND: 'bind',
   JMAPI_PORT: 'port',
   JMAPI_ADMIN_BIND: 'adminBind',
@@ -35,7 +37,7 @@ export function loadConfig(path, env = process.env) {
       cfg[cfgKey] = typeof DEFAULTS[cfgKey] === 'number' ? Number(env[envKey]) : env[envKey];
     }
   }
-  for (const key of ['dailyCreditCap', 'rateLimitPerMin', 'maxConcurrent', 'maxBodyBytes', 'fileUrlTtlSeconds', 'port', 'adminPort']) {
+  for (const key of ['dailyCreditCap', 'rateLimitPerMin', 'maxConcurrent', 'maxBodyBytes', 'fileUrlTtlSeconds', 'imageWaitSeconds', 'port', 'adminPort']) {
     if (!Number.isFinite(cfg[key]) || cfg[key] < 0) throw new Error(`配置项 ${key} 非法：${cfg[key]}`);
   }
   cfg.capDisabledWarning = cfg.dailyCreditCap === 0;

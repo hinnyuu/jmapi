@@ -35,6 +35,11 @@ test('错误信封保留 code/hint/合法参数（翻译层锚点）', async () 
   assert.ok(r.error.hint);
 });
 
+test('execCli HOME 覆盖（凭据落 state bind 锚定）', async () => {
+  const r = await execCli(fake, ['home-probe'], { home: '/tmp/jm-home-anchor' });
+  assert.equal(r.data.home, '/tmp/jm-home-anchor');
+});
+
 test('非 JSON stdout → NO_ENVELOPE 不崩溃（负例）', () => {
   assert.equal(parseEnvelope('plain text').error.code, 'NO_ENVELOPE');
   assert.equal(parseEnvelope('{broken').error.code, 'BAD_ENVELOPE');

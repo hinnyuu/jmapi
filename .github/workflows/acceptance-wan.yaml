@@ -59,7 +59,7 @@ jobs:
           check "TLS healthz 200" 200 "$(curl -sk $R -o /dev/null -w '%{http_code}' --max-time 10 "$B/healthz")"
           check "admin 不经反代 404" 404 "$(curl -sk $R -o /dev/null -w '%{http_code}' --max-time 10 "$B/admin/status")"
           check "无 key 401" 401 "$(curl -sk $R -o /dev/null -w '%{http_code}' --max-time 10 "$B/v1/models")"
-          check "有 key M0 未实现 501" 501 "$(curl -sk $R -H 'Authorization: Bearer jmapi-smoke-test-key' -o /dev/null -w '%{http_code}' --max-time 10 "$B/v1/models")"
+          check "有 key 上游未登录 502" 502 "$(curl -sk $R -H 'Authorization: Bearer jmapi-smoke-test-key' -o /dev/null -w '%{http_code}' --max-time 10 "$B/v1/models")"
           check "明文业务端口 WAN 不可达" 000 "$(curl -s -o /dev/null -w '%{http_code}' --max-time 8 "http://${IP}:${API_PORT}/healthz")"
           check "明文 admin 端口 WAN 不可达" 000 "$(curl -s -o /dev/null -w '%{http_code}' --max-time 8 "http://${IP}:${ADMIN_PORT}/admin/status")"
           exit $fail

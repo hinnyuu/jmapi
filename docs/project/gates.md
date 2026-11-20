@@ -27,7 +27,8 @@ CI 与本地预检聚合校验；新文件未登记 → 红（防图谱腐烂）
    （ubuntu 24.04 须 `sysctl kernel.apparmor_restrict_unprivileged_userns=0`，仅 CI 临时环境）；
    覆盖 healthz/readyz、401/501、config ro、bind 属主、uid/卷矩阵、删容器重建缓存命中、优雅退出；
    uid 断言读 `/proc/1/status`（exec 是新进程，不继承 entrypoint 降权）；healthz 轮询上限 60s
-   （慢 runner 容器启动可超 15s，实证）防启动竞态；
+   （慢 runner 容器启动可超 15s，实证）防启动竞态；M1 起有 key 就绪断言为 502
+   （上游未登录映射，替代 M0 的 501 未实现）；
    切换用户的 podman 包装器显式 HOME+XDG 三件套（runuser 保留调用者环境，防 XDG_CONFIG_HOME 泄漏）；
    full 矩阵追加 rootful+bind、非 1000 uid（CI 临时用户）、docker+bind、**T8 Caddy 路由自测**
    （caddy 容器 + tls internal 自签 + loopback：admin 404/healthz 200/401/501；CI 钉版

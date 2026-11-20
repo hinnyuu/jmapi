@@ -3,7 +3,7 @@
 > 端点当前事实见仓库 [docs/api.md](../../docs/api.md)；本页给可复制示例。
 > M0 阶段仅 healthz/readyz 与认证门禁；生成端点 M1/M2 落地后本页同步更新。
 
-## OpenAI SDK（M1 起）
+## OpenAI SDK（M1 起可用）
 
 ```python
 from openai import OpenAI
@@ -11,13 +11,18 @@ client = OpenAI(base_url="http://<lan-host>:8080/v1", api_key="<你的 key>")
 
 img = client.images.generate(model="seedream_5.0_flash",
                              prompt="一只橘猫坐在窗台上，窗外雨后黄昏",
-                             size="1792x1024")   # size 翻译为 ratio/resolution
-print(img.data[0].url)                          # 签名 URL，短期有效
+                             size="1792x1024")   # size 翻译为最近 ratio
+print(img.data[0].url)                          # HMAC 签名 URL，默认 1h 有效
 
 vid = client.videos.create(model="Seedance_2.0_mini",
                            prompt="镜头缓慢推进，橘猫转头", seconds=4, size="854x480")
 # 轮询 client.videos.retrieve(vid.id) 至 completed，再取 content
 ```
+
+超时语义：images 150s 未完成返回 504（任务未失败），按 error.param 的 jobId 轮询
+`GET /v1/jobs/{id}`，**勿重复提交**；videos 天生异步。
+videos.create 兼容官方 SDK 的 multipart 形态（纯字段）；参考图上传（input_reference）M1 不支持（400）。
+积分帽默认 500/天（UTC），达上限新提交 429；查询不受限。
 
 ## DashScope 风格（M2 起）
 

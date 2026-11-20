@@ -185,7 +185,7 @@ gh run watch --exit-status   # 或 gh run view --log 判读六断言
 
 ```bash
 # https://jmapi-wan.test:28443（--resolve 指向 EIP，-k）：
-#   /healthz 200；/admin/status 404；/v1/models 401；带 key 501
+#   /healthz 200；/admin/status 404；/v1/models 401；带 key 502（上游未登录映射）
 # http://<EIP>:8080/healthz 与 http://<EIP>:8081/admin/status：000（WAN 不可达）
 ```
 
@@ -202,3 +202,44 @@ gh run watch --exit-status   # 或 gh run view --log 判读六断言
 PR 评论逐项记录：`项 N：PASS/FAIL/SKIP(inconclusive) + 执行日期 + 宿主描述（发行版/podman 版本/SELinux 状态）+ 偏差说明`。
 FAIL 登记 issue 并阻断 merge；SKIP 须附证据命令输出并由人工确认接受风险。
 项 3 记录管理员操作确认与外网判读双方时间戳。
+## 项 4：M1 live SDK 实测（真生成，花积分；须用户批准）
+
+### 前置
+
+- 用户批准积分额度；jmapi 容器运行且已登录（`podman exec -e HOME=/state/home … login`，见 quickstart）。
+- openai SDK（任意语言）或 curl；base_url 指向服务 `/v1`。
+
+### 执行（grounding：2026-11-20 实测 PASS，30 积分）
+
+```bash
+# images 同步（SDK images.generate 等价）
+curl -s -X POST http://<host>:8080/v1/images/generations \
+  -H 'Authorization: Bearer <key>' -H 'Content-Type: application/json' \
+  -d '{"model":"seedream_5.0_flash","prompt":"一只橘猫坐在窗台上，窗外雨后黄昏","size":"1792x1024"}'
+# 期望 200 {created,data:[{url}]}；取 url：
+curl -s -o /tmp/live.png -w '%{http_code}\n' '<data[0].url>'   # 期望 200
+xxd -l 4 /tmp/live.png   # 期望 89504e47（PNG magic）
+# videos 异步（SDK videos.create 发 multipart，curl JSON 亦接受）
+curl -s -X POST http://<host>:8080/v1/videos -H 'Authorization: Bearer <key>' \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"Seedance_2.0_mini","prompt":"镜头缓慢推进，橘猫转头","seconds":4,"size":"854x480"}'
+# 期望 200 {id,status:queued}；轮询：
+curl -s http://<host>:8080/v1/videos/<id> -H 'Authorization: Bearer <key>'
+# 期望 status 最终 completed（实测 ~2-4分钟；running 勿重提）
+curl -s -o /tmp/live.mp4 -w '%{http_code}\n' http://<host>:8080/v1/videos/<id>/content -H 'Authorization: Bearer <key>'
+# 期望 200 + content-type video/mp4
+xxd -s 4 -l 4 /tmp/live.mp4   # 期望 ftyp
+# 积分核对：
+podman exec <container> curl -s http://127.0.0.1:8081/admin/status   # creditsToday 与 ledger 一致
+```
+
+### 通过标准
+
+images 200+PNG magic；videos queued→completed；content 200+ftyp；creditsToday=ledger 合计
+（实测 3+3+24=30；mini 480p 4s 实际 24 积分）。SDK 形态（multipart videos.create）须同过。
+
+### 清理
+
+```bash
+podman rm -f <container>; rm -rf <bind-root> /tmp/live.png /tmp/live.mp4 <sdk-scratch>
+```

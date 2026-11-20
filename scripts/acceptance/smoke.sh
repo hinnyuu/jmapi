@@ -237,7 +237,7 @@ assert_eq "T1 healthz 恒 200" "200" "$(wait_http "${BASE1}/healthz" 60)"
 check_ready "T1" "$BASE1" 180
 assert_eq "T1 /v1/models 无 key 401" "401" "$(http_code "${BASE1}/v1/models")"
 assert_contains "T1 401 OpenAI 错误信封" "$(curl -s --max-time 6 "${BASE1}/v1/models")" '"error"'
-assert_eq "T1 有 key 且就绪 M0 未实现 501" "501" "$(http_code -H "Authorization: Bearer ${API_KEY}" "${BASE1}/v1/models")"
+assert_eq "T1 有 key 且就绪上游未登录 502" "502" "$(http_code -H "Authorization: Bearer ${API_KEY}" "${BASE1}/v1/models")"
 if as_podman exec "${TAG}-t1" touch /config/probe >/dev/null 2>&1; then
   bad "T1 /config 只读（touch 应被拒绝）"
 else
@@ -393,7 +393,7 @@ done
 assert_eq "T8 自签 TLS healthz 200" "200" "$(http_code -k $TLSRES "${TLSBASE}/healthz")"
 assert_eq "T8 admin 不经反代 404" "404" "$(http_code -k $TLSRES "${TLSBASE}/admin/status")"
 assert_eq "T8 无 key 401" "401" "$(http_code -k $TLSRES "${TLSBASE}/v1/models")"
-assert_eq "T8 有 key M0 未实现 501" "501" "$(http_code -k $TLSRES -H "Authorization: Bearer ${API_KEY}" "${TLSBASE}/v1/models")"
+assert_eq "T8 有 key 上游未登录 502" "502" "$(http_code -k $TLSRES -H "Authorization: Bearer ${API_KEY}" "${TLSBASE}/v1/models")"
 
 echo
 echo "== 冒烟结果：PASS=${PASS} FAIL=${FAIL} =="

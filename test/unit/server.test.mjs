@@ -48,7 +48,7 @@ test('healthz 恒 200；readyz 就绪 200 / 未就绪 503', async (t) => {
   });
 });
 
-test('认证与就绪门禁顺序：无 key 401 → 有 key 未就绪 503 → 就绪未实现 501 → 未知 404', async (t) => {
+test('认证与就绪门禁顺序：无 key 401 → 有 key 未就绪 503 → 就绪 models 200 → 未知 404', async (t) => {
   await withServer(t, 'fetching', async (base) => {
     const noKey = await fetch(base + '/v1/models');
     assert.equal(noKey.status, 401);
@@ -57,7 +57,7 @@ test('认证与就绪门禁顺序：无 key 401 → 有 key 未就绪 503 → �
     assert.equal(withKey.status, 503);
   });
   await withServer(t, 'ready', async (base) => {
-    assert.equal((await fetch(base + '/v1/models', { headers: { Authorization: 'Bearer test-key' } })).status, 501);
+    assert.equal((await fetch(base + '/v1/models', { headers: { Authorization: 'Bearer test-key' } })).status, 200);
     assert.equal((await fetch(base + '/v1/models', { headers: { Authorization: 'Bearer wrong' } })).status, 401);
     assert.equal((await fetch(base + '/nope')).status, 404);
     assert.equal((await fetch(base + '/admin/status')).status, 404);

@@ -12,9 +12,9 @@ export function parseEnvelope(stdout) {
 }
 
 // running（exit 0）是正常语义：超时未完成≠失败，调用方轮询，不自动重提。
-export function execCli(binary, args, { timeoutMs = 600000, env = process.env } = {}) {
+export function execCli(binary, args, { timeoutMs = 600000, env = process.env, home = null } = {}) {
   return new Promise((resolve) => {
-    const child = spawn(binary, [...args, '-j'], { env: { ...env, METRICS_LOG_LEVEL: 'none' } });
+    const child = spawn(binary, [...args, '-j'], { env: { ...env, METRICS_LOG_LEVEL: 'none', ...(home ? { HOME: home } : {}) } });
     let out = '';
     let err = '';
     const timer = setTimeout(() => child.kill('SIGKILL'), timeoutMs);

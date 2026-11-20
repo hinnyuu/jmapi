@@ -392,5 +392,47 @@
     "supersedes": [],
     "superseded_by": [],
     "pr": "1"
+  },
+  {
+    "file": "2026-11-20-1710-live-multipart-home-fix.md",
+    "title": "live 实测两缺陷：SDK multipart 形态与凭据 HOME 落点",
+    "date": "2026-11-20T17:10:00+08:00",
+    "keywords": [
+      "credentials",
+      "home",
+      "state-bind",
+      "restart",
+      "multipart",
+      "sdk",
+      "live-test"
+    ],
+    "scope": [
+      "project"
+    ],
+    "type": "change",
+    "status": "accepted",
+    "supersedes": [],
+    "superseded_by": [],
+    "pr": "2"
+  },
+  {
+    "file": "2026-11-20-1735-live-pass-record.md",
+    "title": "M1 live SDK 实测 PASS 记录（30 积分）与 runbook 项 4 回写",
+    "date": "2026-11-20T17:35:00+08:00",
+    "keywords": [
+      "live-test",
+      "sdk",
+      "pass",
+      "credits",
+      "runbook-grounding"
+    ],
+    "scope": [
+      "project"
+    ],
+    "type": "change",
+    "status": "accepted",
+    "supersedes": [],
+    "superseded_by": [],
+    "pr": "2"
   }
 ]
