@@ -21,9 +21,8 @@
 
 ## in-flight
 
-- live 实测抓两缺陷已修：SDK multipart 形态（readBody 双解析）+ 凭据 HOME 落 state/home
-  （entrypoint 统一+exec -e HOME；history 1710）；47 测试绿待验；待新镜像+用户重新授权+重跑 live
-  → runbook live 段回写 → sign-off → merge。
+- **live 实测 PASS（30 积分：3+3+24；models 35/images PNG/videos completed/content ftyp）**；
+  runbook 项 4 已 grounding 回写；sign-off 代录 + squash merge PR #2 + release 重冒烟 + 清理 live 栈。
 
 ## 下一动作
 
