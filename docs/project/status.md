@@ -21,7 +21,7 @@
 
 ## in-flight
 
-- M1 PR 创建 + CI（分支 m1-openai-core）。
+- M1 PR #2：CI 六 job 全绿 + 本机 dev rootless smoke 19/19（pr-2 镜像）；待用户 live 批准 + sign-off + approve。
 
 ## 下一动作
 
