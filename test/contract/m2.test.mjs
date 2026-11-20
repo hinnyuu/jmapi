@@ -20,7 +20,8 @@ function fakeExec({ mode = 'ok' } = {}) {
       const ext = { images: '.png', videos: '.mp4', audios: '.mp3' };
       for (const key of ['images', 'videos', 'audios']) {
         for (const item of env.data?.[key] || []) {
-          if (!item.output_path) item.output_path = path.join(outDir, `${item.assetId || 'asset'}${ext[key]}`);
+          // fixture 的 output_path 为脱敏绝对路径 /output/…：一律 rebase 到 outDir（CI 非 root 不可 mkdir /output）
+          item.output_path = path.join(outDir, path.basename(item.output_path || `${item.assetId || 'asset'}${ext[key]}`));
           fs.mkdirSync(path.dirname(item.output_path), { recursive: true });
           fs.writeFileSync(item.output_path, 'fake-media-bytes');
         }
