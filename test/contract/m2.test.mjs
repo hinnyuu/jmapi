@@ -43,6 +43,9 @@ function fakeExec({ mode = 'ok' } = {}) {
       if (mode === 'script-running' && sub !== 'result') {
         return { status: 'success', data: { thread_id: 't-s', run_id: 'r-s', completed: false } };
       }
+      if (mode === 'script-writefail' && sub === 'result') {
+        return { status: 'error', error: { code: 'COMMAND_FAILED', message: 'script succeeded but cannot write /output/x/: rename failed' } };
+      }
       return read('script-result.json');
     }
     if (cmd === 'query-result') {
@@ -161,6 +164,18 @@ test('script 异步：submit running → /v1/jobs 轮询 settle completed（负�
   const jb = await job.json();
   assert.equal(jb.status, 'completed');
   assert.equal(jb.kind, 'script');
+});
+
+test('script 落盘失败≠生成失败：保持 in_progress+retryable（负例锚定）', async (t) => {
+  const { base, H } = await withServer(t, { exec: fakeExec({ mode: 'script-writefail' }) });
+  const res = await fetch(base + '/v1/script/outline', {
+    method: 'POST', headers: H, body: JSON.stringify({ episode_num: 3, idea: '橘猫归家' }),
+  });
+  const body = await res.json();
+  const job = await fetch(`${base}/v1/jobs/${body.id}`, { headers: H });
+  const jb = await job.json();
+  assert.equal(jb.status, 'in_progress');
+  assert.equal(jb.error.retryable, true);
 });
 
 test('admin：login 挑战/wait logged_in/config reload/refresh', async (t) => {

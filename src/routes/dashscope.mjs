@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { sendJson } from '../server.mjs';
 import { signedFileUrl } from '../files.mjs';
+import { ensureOutDir, isWritePathError } from '../jobs.mjs';
 import { ratioFromSize } from './openai.mjs';
 
 function dsError(res, code, message, http = 400) {
@@ -23,26 +24,32 @@ function taskOutput(ctx, job) {
 export async function pollIfNeeded(ctx, job) {
   if (job.kind === 'video' && (job.status === 'queued' || job.status === 'in_progress')) {
     const env = await ctx.execCli(ctx.fetcher.binary, ['query-result', '--thread-id', job.thread_id, '--run-id', job.run_id,
-      '--out', path.join(ctx.outputDir, job.id) + '/']);
+      '--out', ensureOutDir(ctx, job.id)]);
     if (env.status === 'success' && env.data?.completed) {
       return ctx.jobs.update(job.id, {
         status: 'completed', credits: env.data.credits?.deducted ?? 0,
         outputs: (env.data.videos || []).filter((v) => v.output_path).map((v) => ({ name: path.basename(v.output_path), path: v.output_path, assetId: v.assetId || null })),
       });
     }
-    if (env.status === 'error') return ctx.jobs.update(job.id, { status: 'failed', error: { code: env.error?.code, message: env.error?.message } });
+    if (env.status === 'error') {
+      if (isWritePathError(env)) return ctx.jobs.update(job.id, { status: 'in_progress', error: { code: env.error?.code, message: env.error?.message, retryable: true } });
+      return ctx.jobs.update(job.id, { status: 'failed', error: { code: env.error?.code, message: env.error?.message } });
+    }
     return ctx.jobs.update(job.id, { status: 'in_progress' });
   }
   if (job.kind === 'script' && (job.status === 'queued' || job.status === 'in_progress')) {
     const env = await ctx.execCli(ctx.fetcher.binary, ['script', 'result', '--thread-id', job.thread_id, '--run-id', job.run_id,
-      '--out', path.join(ctx.outputDir, job.id) + '/'], { cwd: ctx.scriptDir });
+      '--out', ensureOutDir(ctx, job.id)], { cwd: ctx.scriptDir });
     if (env.status === 'success' && env.data?.completed) {
       return ctx.jobs.update(job.id, {
         status: 'completed', credits: env.data.credits?.deducted ?? 0,
         outputs: env.data.localPath ? [{ name: path.basename(env.data.localPath), path: env.data.localPath, assetId: null }] : [],
       });
     }
-    if (env.status === 'error') return ctx.jobs.update(job.id, { status: 'failed', error: { code: env.error?.code, message: env.error?.message } });
+    if (env.status === 'error') {
+      if (isWritePathError(env)) return ctx.jobs.update(job.id, { status: 'in_progress', error: { code: env.error?.code, message: env.error?.message, retryable: true } });
+      return ctx.jobs.update(job.id, { status: 'failed', error: { code: env.error?.code, message: env.error?.message } });
+    }
     return ctx.jobs.update(job.id, { status: 'in_progress' });
   }
   return job;
@@ -75,7 +82,7 @@ export async function handleDashScope(req, res, ctx, pathname, body) {
     const ratio = ratioFromSize(parameters?.size);
     if (!ratio) return dsError(res, 'InvalidParameter', `parameters.size 格式须为 WxH：${parameters?.size}`);
     const job = ctx.jobs.create({ kind: isVideo ? 'video' : 'image', model });
-    const outArg = path.join(ctx.outputDir, job.id) + '/';
+    const outArg = ensureOutDir(ctx, job.id);
     let env;
     if (isVideo) {
       const duration = parameters?.duration === undefined ? 4 : Number(parameters.duration);

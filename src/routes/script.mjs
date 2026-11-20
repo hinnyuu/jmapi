@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { sendJson, openaiError } from '../server.mjs';
 import { signedFileUrl } from '../files.mjs';
+import { ensureOutDir } from '../jobs.mjs';
 
 // script 命令须目录绑定画布：门面维护隐藏绑定目录 state/script（首次调用 init）
 async function ensureScriptProject(ctx) {
@@ -46,7 +47,7 @@ export async function handleScript(req, res, ctx, pathname, body) {
   }
   if (b.model_key) args.push('--model-key', String(b.model_key));
   const job = ctx.jobs.create({ kind: 'script', model: b.model_key || 'script_bird' });
-  args.push('--out', path.join(ctx.outputDir, job.id) + '/');
+  args.push('--out', ensureOutDir(ctx, job.id));
   const env = await ctx.execCli(ctx.fetcher.binary, args, { cwd: ctx.scriptDir });
   if (env.status === 'success' && env.data?.thread_id) {
     const done = env.data.completed

@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { signedFileUrl } from '../files.mjs';
+import { ensureOutDir, isWritePathError } from '../jobs.mjs';
 import { sendJson, openaiError } from '../server.mjs';
 import { pollIfNeeded } from './dashscope.mjs';
 
@@ -71,10 +72,13 @@ function videoObject(job) {
 
 async function pollVideo(ctx, job) {
   const env = await ctx.execCli(ctx.fetcher.binary, ['query-result', '--thread-id', job.thread_id, '--run-id', job.run_id,
-    '--out', path.join(ctx.outputDir, job.id) + '/']);
+    '--out', ensureOutDir(ctx, job.id)]);
   if (env.status === 'running') return ctx.jobs.update(job.id, { status: 'in_progress' });
   if (env.status === 'success' && env.data?.completed) return settle(ctx, job, env.data);
   if (env.status === 'error') {
+    if (isWritePathError(env)) {
+      return ctx.jobs.update(job.id, { status: 'in_progress', error: { code: env.error?.code, message: env.error?.message, retryable: true } });
+    }
     return ctx.jobs.update(job.id, { status: 'failed', error: { code: env.error?.code, message: env.error?.message } });
   }
   return job;
@@ -122,7 +126,7 @@ export async function handleOpenAI(req, res, ctx, pathname, body) {
     const job = ctx.jobs.create({ kind: 'image', model });
     const args = ['generate-image', '--model', model, '--prompt', prompt, '--ratio', ratio,
       '--generate-image-count', String(count), '--wait', String(ctx.config.imageWaitSeconds),
-      '--out', path.join(ctx.outputDir, job.id) + '/'];
+      '--out', ensureOutDir(ctx, job.id)];
     const env = await ctx.execCli(binary, args, { timeoutMs: (ctx.config.imageWaitSeconds + 30) * 1000 });
     if (env.status === 'success' && env.data?.completed) {
       const done = settle(ctx, job, env.data);
@@ -154,7 +158,7 @@ export async function handleOpenAI(req, res, ctx, pathname, body) {
     }
     const job = ctx.jobs.create({ kind: 'video', model });
     const env = await ctx.execCli(binary, ['generate-video', '--model', model, '--prompt', prompt,
-      '--duration', String(duration), '--ratio', ratio, '--out', path.join(ctx.outputDir, job.id) + '/']);
+      '--duration', String(duration), '--ratio', ratio, '--out', ensureOutDir(ctx, job.id)]);
     if (env.status === 'success' && env.data?.submissionStatus === 'submitted') {
       const upd = ctx.jobs.update(job.id, { status: 'in_progress', thread_id: env.data.thread_id, run_id: env.data.run_id });
       return sendJson(res, 200, { ...videoObject(upd), status: 'queued' });

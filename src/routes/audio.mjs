@@ -3,6 +3,7 @@ import path from 'node:path';
 import { sendJson, openaiError } from '../server.mjs';
 import { signedFileUrl } from '../files.mjs';
 import { contentTypeFor } from '../files.mjs';
+import { ensureOutDir } from '../jobs.mjs';
 
 // OpenAI /v1/audio/speech 形状 ↔ qwen_tts；voice 参数接受但忽略（qwen_tts 无音色控制，文档写明）
 export async function handleAudio(req, res, ctx, pathname, body) {
@@ -21,7 +22,7 @@ export async function handleAudio(req, res, ctx, pathname, body) {
     }
     const job = ctx.jobs.create({ kind: 'audio', model: useModel });
     const env = await ctx.execCli(ctx.fetcher.binary, ['generate-audio', '--model', useModel, '--prompt', input,
-      '--wait', String(ctx.config.imageWaitSeconds), '--out', path.join(ctx.outputDir, job.id) + '/'],
+      '--wait', String(ctx.config.imageWaitSeconds), '--out', ensureOutDir(ctx, job.id)],
     { timeoutMs: (ctx.config.imageWaitSeconds + 30) * 1000 });
     if (env.status === 'success' && env.data?.completed) {
       const outputs = (env.data.audios || []).filter((a) => a.output_path)
@@ -56,7 +57,7 @@ export async function handleAudio(req, res, ctx, pathname, body) {
     }
     const job = ctx.jobs.create({ kind: 'audio', model: useModel });
     const args = ['generate-audio', '--model', useModel, '--prompt', prompt,
-      '--wait', String(ctx.config.imageWaitSeconds), '--out', path.join(ctx.outputDir, job.id) + '/'];
+      '--wait', String(ctx.config.imageWaitSeconds), '--out', ensureOutDir(ctx, job.id)];
     if (sample_rate !== undefined) args.push('--parameters', JSON.stringify({ sample_rate: String(sample_rate) }));
     const env = await ctx.execCli(ctx.fetcher.binary, args, { timeoutMs: (ctx.config.imageWaitSeconds + 30) * 1000 });
     if (env.status === 'success' && env.data?.completed) {
