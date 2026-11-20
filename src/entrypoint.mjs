@@ -54,6 +54,16 @@ const ctx = { fetcher, apiKey, config, execCli };
 
 const business = createBusinessServer({ ctx });
 const admin = createAdminServer({ ctx });
+// 无 IPv6 的 netns 回退 IPv4（边界校验：容器网络能力不可假设）
+business.once('error', (err) => {
+  if ((err.code === 'EAFNOSUPPORT' || err.code === 'EADDRNOTAVAIL') && config.bind === '::') {
+    log('warning', { message: `bind :: 失败（${err.code}），回退 0.0.0.0` });
+    config.bind = '0.0.0.0';
+    business.listen(config.port, config.bind, () => log('listening', { port: config.port, bind: config.bind }));
+  } else {
+    fail(`listen 失败：${err.message}`);
+  }
+});
 business.listen(config.port, config.bind, () => log('listening', { port: config.port, bind: config.bind }));
 admin.listen(config.adminPort, config.adminBind, () => log('listening', { port: config.adminPort, bind: config.adminBind, face: 'admin' }));
 

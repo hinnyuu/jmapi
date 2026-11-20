@@ -7,7 +7,8 @@ export const DEFAULTS = {
   maxConcurrent: 4,
   maxBodyBytes: 10 * 1024 * 1024,
   fileUrlTtlSeconds: 3600,
-  bind: '0.0.0.0',
+  // 双栈监听：pasta 等转发器把宿主 v6 指向容器 v6 socket，仅 0.0.0.0 会致 v6 reset（实测）
+  bind: '::',
   port: 8080,
   adminBind: '127.0.0.1',
   adminPort: 8081,

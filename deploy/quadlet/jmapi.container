@@ -8,6 +8,7 @@ After=network-online.target
 
 [Container]
 Image=ghcr.io/hinnyuu/jmapi:latest
+Pull=newer
 ContainerName=jmapi
 EnvironmentFile=%h/.config/jmapi/env
 # 双栈：单条 bare PublishPort 即双栈（podman 4.3 rootless 与 5.8 pasta 实测 v4/v6 皆通）；

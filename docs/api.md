@@ -3,6 +3,7 @@
 > 双一等公民：OpenAI 兼容面与 DashScope 兼容面共享同一任务表与 CLI 执行层。
 > 认证：`Authorization: Bearer <JMAPI_API_KEY>`；缺失/错误 → 401 标准错误信封。
 > 就绪前业务端点 503；M0 未实现端点有 key 时 501。
+> 业务面默认双栈监听（`::`，JMAPI_BIND 可覆盖）；IPv4/IPv6 loopback 与反代两族皆可达。
 
 ## M0（当前）
 

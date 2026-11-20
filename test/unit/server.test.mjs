@@ -75,6 +75,19 @@ test('admin 面只读状态，不含 key', async (t) => {
   });
 });
 
+test('默认 bind :: 双栈：IPv4 loopback 可达（pasta v6 转发锚定）', async (t) => {
+  const c = ctx('ready');
+  const srv = createBusinessServer({ ctx: c });
+  const ok = await new Promise((resolve) => {
+    srv.once('error', () => resolve(false));
+    srv.listen(0, '::', () => resolve(true));
+  });
+  if (!ok) { t.skip('netns 无 IPv6'); return; }
+  t.after(() => srv.close());
+  const res = await fetch(`http://127.0.0.1:${srv.address().port}/healthz`);
+  assert.equal(res.status, 200);
+});
+
 test('错误信封形状符合 OpenAI 约定', () => {
   const e = openaiError('invalid_api_key', 'msg', 'authentication_error');
   assert.deepEqual(Object.keys(e.error).sort(), ['code', 'message', 'param', 'type']);
