@@ -71,3 +71,10 @@ Anthropic/chat 兼容（即梦文本为封闭 schema 的结构化剧本工具，
 - 单账号积分集中：条款边界与烧积分风险靠积分帽+限流+告警缓解；多人共用前须评估。
 - Windows 宿主未覆盖（容器路径 Linux only）。
 - 开发机 podman 4.3 无 Quadlet（生产宿主选 ≥4.4；trailblazer 5.8 已验证）。
+
+### 维护期机制注记
+
+- **strict=true 分支同步**：required_status_checks.strict 要求 PR 分支与 main 同步；
+  多 PR 并行时每次 merge 前须 `gh pr update-branch <N>`（保护禁 force-push，不可 rebase 强推）；
+  update 后 CI 重跑绿再 merge。PR #6 实证（2026-11-20）。
+- **GitHub API 间歇 TLS 超时**：gh 操作有界重试；后台链须 CI 不绿即中止 + merge 前复查分支同步。

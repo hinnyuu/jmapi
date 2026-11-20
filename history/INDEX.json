@@ -475,5 +475,24 @@
     "supersedes": [],
     "superseded_by": [],
     "pr": "4"
+  },
+  {
+    "file": "2026-11-20-2130-strict-branch-note.md",
+    "title": "strict=true 分支同步机制注记（PR #6 实证）",
+    "date": "2026-11-20T21:30:00+08:00",
+    "keywords": [
+      "branch-protection",
+      "strict",
+      "update-branch",
+      "merge-mechanics"
+    ],
+    "scope": [
+      "project"
+    ],
+    "type": "change",
+    "status": "accepted",
+    "supersedes": [],
+    "superseded_by": [],
+    "pr": "6"
   }
 ]

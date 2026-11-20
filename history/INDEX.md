@@ -2,7 +2,7 @@
 
 > 由 scripts/docs-gate 从 frontmatter 生成（派生物，勿手改）。规则见 conventions.md。
 
-共 23 条。
+共 24 条。
 
 - [项目定位：即梦 CLI 的 API 包装器与干净安装研究](2026-11-19-1650-project-positioning-wrapper.md) — 2026-11-19T16:50:00+08:00 · decision · accepted · scope: project · keywords: jimeng, installer, wrapper, podman, ghcr
 - [API 兼容面选型：OpenAI 与 DashScope 双一等公民](2026-11-19-1710-api-compatibility-surfaces.md) — 2026-11-19T17:10:00+08:00 · decision · accepted · scope: project · keywords: openai, dashscope, api, async, compatibility
@@ -27,3 +27,4 @@
 - [M1 live SDK 实测 PASS 记录（30 积分）与 runbook 项 4 回写](2026-11-20-1735-live-pass-record.md) — 2026-11-20T17:35:00+08:00 · change · accepted · scope: project · keywords: live-test, sdk, pass, credits, runbook-grounding
 - [M2 live 实测 PASS（17 积分）与 script 落盘三缺陷修复记录](2026-11-20-1932-m2-live-pass-record.md) — 2026-11-20T19:32:00+08:00 · change · accepted · scope: project · keywords: m2-live, pass, credits, script-out-file, write-error-semantics, runbook-grounding
 - [M3 sign-off 与项 6 SKIP(deferred) 决策；项目进入维护态](2026-11-20-2010-m3-signoff-skip-deferred.md) — 2026-11-20T20:10:00+08:00 · decision · accepted · scope: project · keywords: m3, sign-off, skip-deferred, acme, maintenance-mode
+- [strict=true 分支同步机制注记（PR #6 实证）](2026-11-20-2130-strict-branch-note.md) — 2026-11-20T21:30:00+08:00 · change · accepted · scope: project · keywords: branch-protection, strict, update-branch, merge-mechanics
