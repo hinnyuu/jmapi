@@ -10,9 +10,9 @@ After=network-online.target
 Image=ghcr.io/hinnyuu/jmapi:latest
 ContainerName=jmapi
 EnvironmentFile=%h/.config/jmapi/env
-# 双栈：两条 PublishPort（IPv4+IPv6），勿合并为一条（godoword 历史回归教训）
+# 双栈：单条 bare PublishPort 即双栈（podman 4.3 rootless 与 5.8 pasta 实测 v4/v6 皆通）；
+# 追加 [::] 行会与 bare 的双栈 socket 冲突致启动失败（实测复现）
 PublishPort=8080:8080
-PublishPort=[::]:8080:8080
 # admin 8081 只绑容器 loopback，不 publish；宿主访问用 podman exec（见 quickstart）
 Volume=%h/jmapi-data/config:/config:ro,Z
 Volume=%h/jmapi-data/state:/state:Z
@@ -23,6 +23,7 @@ HealthInterval=30s
 
 [Service]
 Restart=on-failure
+TimeoutStartSec=300
 TimeoutStopSec=10
 
 [Install]

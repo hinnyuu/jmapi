@@ -59,3 +59,9 @@ key fail-closed；admin 只绑 loopback/LAN；产物 URL HMAC 短期签名；积
 
 versions.lock 钉基础镜像 tag+digest（digest 首 CI 后回填）、CLI 版本包 URL+inner sha256；
 构建期 digest 比对；启动期缓存复验；CI 工具（gitleaks）钉版+checksum 后执行。
+
+## 部署单元
+
+Quadlet（podman≥4.4）：单条 bare `PublishPort=8080:8080` 即双栈（4.3 rootless 与 5.8 pasta
+实测 v4/v6 皆通；追加 `[::]` 行与 bare 双栈 socket 冲突致启动失败，实测复现）；
+admin 不 publish；TimeoutStartSec=300 容纳首启 fetch。

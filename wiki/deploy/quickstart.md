@@ -58,7 +58,8 @@ docker 宿主 SELinux 通常关闭，`:Z` 可保留（docker 忽略未知选项�
 
 ## systemd 常驻（podman≥4.4，Quadlet）
 
-见 [quadlet/](../../deploy/quadlet/)：用户单元 + `UserNS` 默认映射 + 双栈两条 PublishPort；
+见 [quadlet/](../../deploy/quadlet/)：用户单元 + 单条 bare PublishPort 即双栈
+（4.3 rootless 与 5.8 pasta 实测；追加 [::] 行会 bind 冲突）；
 `loginctl enable-linger $USER`。podman 4.3.x 无 Quadlet，用 run.sh + systemd 服务或自行升级。
 
 ## 公网反代（Caddy，个人使用）
