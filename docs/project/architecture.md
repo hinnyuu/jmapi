@@ -41,7 +41,9 @@ routes/script.mjs outline/episode；隐藏绑定 state/script 首次 init；exec
 admin            login/login wait/cli refresh/config reload（loopback/LAN only）
 server.mjs       guards：per-key 分钟窗口限流 + 生成类全局并发闸（429）；readBody 上限 413
                  （drain 不 destroy）；**JSON + multipart 纯字段双解析**（SDK videos.create
-                 发 multipart，实测抓出；文件部分 400）；/files 签名面；/v1 分发；/api 501（M2）
+                 发 multipart，实测抓出；文件部分 400）；/files 签名面；/v1 分发；/api 501（M2）；
+                 安全头 no-store/nosniff；访问日志脱敏（method/path/status/ms）；
+                 admin 非 loopback 启动告警
 routes/dashscope/*（M2）异步任务别名层，共享 jobs
 ```
 

@@ -7,20 +7,19 @@
 
 ## 当前里程碑
 
-**M2 DashScope 面+音频/剧本+admin**（见 [roadmap](roadmap.md)）。M0/M1 已 merge + release 绿
-（M1 live PASS 30 积分，sign-off 代录在 PR #2）。
+**M3 部署加固与公网生产形态**（见 [roadmap](roadmap.md)）。M0/M1/M2 已 merge + release 绿
+（M2 live PASS 17 积分，sign-off 代录在 PR #3）。
 
-## done（M2）
+## done（M3）
 
-- routes/dashscope（异步任务面共享 jobs、X-DashScope-Async 强制）、routes/audio（speech qwen_tts
-  流式 wav/generations seed_audio）、routes/script（隐藏绑定 state/script + execCli cwd）、
-  admin login/wait/refresh/reload。
-- 54/54 契约测试（DashScope/audio/script/admin 正负例）；lint 0；docs/api+architecture+wiki 同步。
+- 安全头（no-store/nosniff/private max-age）、脱敏访问日志、admin 非 loopback 告警；
+  Caddyfile 生产 ACME+安全头；wiki/deploy/production.md（拓扑/备份/升级/监控/故障）；
+  SECURITY 加固节；runbook 项 6（生产 ACME 残留，须用户域名或批准 SKIP）。
+- 契约负例：headers+访问日志不含 key/query。
 
 ## in-flight
 
-- **M2 live PASS（17 积分=3+5+3+6；DashScope/speech/generations/script 全过，outline.md 200+正文）**；
-  script 落盘三缺陷修复+锚定（history 1932）；runbook 项 5 回写；sign-off 代录 + merge PR #3 + release + 清理。
+- M3 PR + CI + smoke；残留项 6 待用户决策（域名+80/443 或 SKIP deferred）。
 
 ## 下一动作
 

@@ -30,6 +30,8 @@
 INVALID_ARGUMENT → 400；其余 → 502 upstream_error（含 logId）。
 限额：per-key 分钟限流 + 生成类全局并发闸（429）；body 上限 413；坏 JSON 400；
 积分帽 UTC 日界累计 deducted，达上限新提交 429 credit_cap_exceeded（查询不受限）。
+响应头：JSON `Cache-Control: no-store` + nosniff；签名文件 nosniff + private max-age=3600；
+访问日志脱敏（method/path/status/ms，不含 key/签名/query）。
 任务表：state/jobs.jsonl append-only + 启动重建（last-wins），崩溃安全。
 
 ## M2 DashScope 面 + 音频/剧本 + admin（当前实现）

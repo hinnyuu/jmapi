@@ -64,7 +64,10 @@ const reloadConfig = () => {
   log('config reloaded', { dailyCreditCap: config.dailyCreditCap });
   if (config.capDisabledWarning) log('warning', { message: 'dailyCreditCap=0：积分帽已关闭' });
 };
-const ctx = { fetcher, apiKey, config, execCli, jobs, outputDir, scriptDir, reloadConfig, baseUrl: 'http://local' };
+const ctx = { fetcher, apiKey, config, execCli, jobs, outputDir, scriptDir, reloadConfig, log, baseUrl: 'http://local' };
+if (!['127.0.0.1', '::1', 'localhost'].includes(config.adminBind)) {
+  log('warning', { message: `admin 绑定非 loopback（${config.adminBind}）：显式 opt-in，须自限来源；公网反代绝不代理 admin` });
+}
 
 const business = createBusinessServer({ ctx });
 const admin = createAdminServer({ ctx });

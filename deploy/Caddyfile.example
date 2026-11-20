@@ -1,7 +1,15 @@
 # Caddy 反代示例（个人公网使用）：只暴露生成面与签名文件面，admin 不出公网。
-# TLS 自动 HTTPS；服务本体明文端口不暴露 WAN。
+# TLS 自动 HTTPS（ACME http-01/tls-alpn，须安全组放行 80/443）；服务本体明文端口不暴露 WAN。
+# 域名替换为自有域名；测试期可用 <公网IP>.nip.io 泛解析（ACME 同样可签）。
 jmapi.example.com {
 	encode zstd gzip
+
+	# 安全头：禁嗅探/禁 referrer/隐藏 server；API 响应 no-store 由服务侧设置
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy no-referrer
+		-Server
+	}
 
 	# 生成面（OpenAI + DashScope）与签名产物 URL
 	@api path /v1/* /api/* /files/*
