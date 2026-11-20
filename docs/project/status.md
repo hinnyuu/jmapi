@@ -22,7 +22,10 @@ PR #1 mergeable，BLOCKED 仅待人工 approve（分支保护设计如此）。
 - 二轮 CI 抓降权二次映射缺陷 + 本机预验抓 release 目录 sha12 后缀缺陷，均修复（history 2030）；
   本机全链路预验：首启 8s readyz 200、二启 cache hit 4s 200。
 - 三轮 CI 抓 gidMap 死参数（lint）已移除；四轮 smoke 17 PASS/5 FAIL → 测量缺陷三处修正
-  （healthz 竞态/exec uid 假红/version 正则）+ T6 诊断补强（history 2045）。
+  （healthz 竞态/exec uid 假红/version 正则）+ T6 诊断补强（history 2045）；五轮 T6 根因
+  XDG_CONFIG_HOME 泄漏修复（history 2055）；六七轮全绿（full 矩阵 + baseDigest 比对）。
+- 八轮 CI 全绿；用户批评残留清单潦草 → runbook 纪律立规 + 完整 runbook 入仓
+  （wiki/deploy/acceptance-runbook.md）+ PR 正文重写（history 2026-11-20-1111）。
 - 仓库设置落地：分支保护（6 checks+1 approve+enforce_admins）、squash-only、secret scanning+push protection。
 - uhub node:22-slim 已添加并 pull 验证；temp 阵地已退役（用户确认，仅删自有两目录）。
 

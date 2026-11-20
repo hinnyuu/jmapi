@@ -75,4 +75,4 @@ docker 宿主 SELinux 通常关闭，`:Z` 可保留（docker 忽略未知选项�
 ## 验收残留（需人工宿主）
 
 SELinux enforcing 正/负例、Quadlet≥4.4、公网 Caddy 实测——本机/CI 覆盖不到，
-按 PR 残留清单三件套执行（命令+通过标准+清理）。
+按 [acceptance-runbook.md](acceptance-runbook.md) 执行（完整命令+通过标准+清理）。

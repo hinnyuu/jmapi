@@ -202,5 +202,24 @@
     "supersedes": [],
     "superseded_by": [],
     "pr": "1"
+  },
+  {
+    "file": "2026-11-20-1111-runbook-discipline.md",
+    "title": "人工残留 runbook 纪律：通过标准必须含可执行命令",
+    "date": "2026-11-20T11:11:00+08:00",
+    "keywords": [
+      "runbook",
+      "acceptance",
+      "documentation-discipline",
+      "pr-body"
+    ],
+    "scope": [
+      "project"
+    ],
+    "type": "change",
+    "status": "accepted",
+    "supersedes": [],
+    "superseded_by": [],
+    "pr": "1"
   }
 ]

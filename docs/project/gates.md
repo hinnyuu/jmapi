@@ -46,7 +46,8 @@ main 分支保护 required checks：commitlint、secrets、docs-gate、node、im
 4. 跑 `gate.py --local` 预检。
 5. 确认无密钥、无禁入文件；fixture 已脱敏。
 6. commit message 合规（type/scope 英文 + subject 中文）。
-7. 有人工残留项时：PR 清单逐项含完整命令（具体镜像 tag）+ 通过标准 + 清理命令，覆盖全部残留项。
+7. 有人工残留项时：PR 残留章节为完整 runbook（前置/执行/通过标准含命令与期望输出/清理，
+   全代码块；与 wiki/deploy/acceptance-runbook.md 同源同批），覆盖全部残留项含负例。
 
 ## 豁免流程
 
