@@ -26,6 +26,8 @@ PR #1 mergeable，BLOCKED 仅待人工 approve（分支保护设计如此）。
   XDG_CONFIG_HOME 泄漏修复（history 2055）；六七轮全绿（full 矩阵 + baseDigest 比对）。
 - 八轮 CI 全绿；用户批评残留清单潦草 → runbook 纪律立规 + 完整 runbook 入仓
   （wiki/deploy/acceptance-runbook.md）+ PR 正文重写（history 2026-11-20-1111）。
+- 九轮 secrets 红 → gitleaks 白名单 schema 缺陷（复数被忽略/regexTarget/熵阈值假绿）
+  修复 + 负例锚定（history 2026-11-20-1122）；十轮 CI 进行中。
 - 仓库设置落地：分支保护（6 checks+1 approve+enforce_admins）、squash-only、secret scanning+push protection。
 - uhub node:22-slim 已添加并 pull 验证；temp 阵地已退役（用户确认，仅删自有两目录）。
 

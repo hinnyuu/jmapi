@@ -2,7 +2,7 @@
 
 > 由 scripts/docs-gate 从 frontmatter 生成（派生物，勿手改）。规则见 conventions.md。
 
-共 11 条。
+共 12 条。
 
 - [项目定位：即梦 CLI 的 API 包装器与干净安装研究](2026-11-19-1650-project-positioning-wrapper.md) — 2026-11-19T16:50:00+08:00 · decision · accepted · scope: project · keywords: jimeng, installer, wrapper, podman, ghcr
 - [API 兼容面选型：OpenAI 与 DashScope 双一等公民](2026-11-19-1710-api-compatibility-surfaces.md) — 2026-11-19T17:10:00+08:00 · decision · accepted · scope: project · keywords: openai, dashscope, api, async, compatibility
@@ -15,3 +15,4 @@
 - [smoke 三处测量缺陷修正与 T6 诊断补强](2026-11-19-2045-smoke-measurement-fixes.md) — 2026-11-19T20:45:00+08:00 · change · accepted · scope: project · keywords: smoke, race, proc-status, exec, diagnostics, version
 - [T6 根因：runuser 环境泄漏 XDG_CONFIG_HOME](2026-11-19-2055-xdg-env-leak-fix.md) — 2026-11-19T20:55:00+08:00 · change · accepted · scope: project · keywords: xdg, runuser, env-leak, rootless, smoke
 - [人工残留 runbook 纪律：通过标准必须含可执行命令](2026-11-20-1111-runbook-discipline.md) — 2026-11-20T11:11:00+08:00 · change · accepted · scope: project · keywords: runbook, acceptance, documentation-discipline, pr-body
+- [gitleaks 白名单 schema 缺陷：单数 [allowlist] 才生效](2026-11-20-1122-gitleaks-allowlist-schema-fix.md) — 2026-11-20T11:22:00+08:00 · change · accepted · scope: project · keywords: gitleaks, allowlist, schema, regexTarget, entropy

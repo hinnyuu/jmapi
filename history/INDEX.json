@@ -221,5 +221,25 @@
     "supersedes": [],
     "superseded_by": [],
     "pr": "1"
+  },
+  {
+    "file": "2026-11-20-1122-gitleaks-allowlist-schema-fix.md",
+    "title": "gitleaks 白名单 schema 缺陷：单数 [allowlist] 才生效",
+    "date": "2026-11-20T11:22:00+08:00",
+    "keywords": [
+      "gitleaks",
+      "allowlist",
+      "schema",
+      "regexTarget",
+      "entropy"
+    ],
+    "scope": [
+      "project"
+    ],
+    "type": "change",
+    "status": "accepted",
+    "supersedes": [],
+    "superseded_by": [],
+    "pr": "1"
   }
 ]
