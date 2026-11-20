@@ -1,0 +1,32 @@
+# NOTICE — 许可与组件边界
+
+本仓库（jmapi）的包装器源码以 MIT 许可证发布（见 LICENSE）。MIT **仅覆盖本仓库原创代码与文档**。
+
+## 镜像内的第三方组件（默认变体）
+
+| 组件 | 许可证 | 说明 |
+|---|---|---|
+| Node.js runtime | MIT | 基础镜像 `node:22-slim` 带入 |
+| smol-toml | MIT | 配置解析，零依赖 |
+| Python 3 | PSF | 官方安装器与 Skill 脚本运行所需 |
+| curl / ca-certificates 等 Debian 基础件 | 各自宽松许可证 | 许可证文本保留于镜像 `/usr/share/doc/` |
+
+默认镜像**不含 ffmpeg**。可选构建变体 `--build-arg WITH_FFMPEG=1` 会经 apt 引入
+ffmpeg（GPL-2.0-or-later，含 LGPL 组件）：该变体的分发者须自行履行 GPL 义务
+（保留 `/usr/share/doc/ffmpeg/copyright` 等许可证文本、提供对应源码获取途径，
+Debian 源码档案：https://sources.debian.org/）。MIT 包装器与 GPL ffmpeg 为聚合关系，互不传染。
+
+## 即梦组件：不在仓库、不在镜像层
+
+即梦 CLI 二进制、canvas runtime、Skill 文档均为字节跳动/即梦的专有产物，
+**不收录于本仓库、不预置于任何镜像层**。容器启动时由操作者以自身身份从官方源
+（`https://jimeng.jianying.com/novel-cli` 或其指向的版本包）获取，遵循即梦官方条款。
+本项目的镜像与仓库不构成对上述专有产物的再分发。
+
+"即梦"、"jimeng" 等商标归其权利人所有；本项目为独立包装器，非官方产品，不暗示任何背书。
+
+## 约定借鉴声明
+
+本项目的开发约定（文档四分、门禁、验收拆分、自适应降权模式等）借鉴自同组织项目
+hinnyuu/godoword（AGPL-3.0）。**仅借鉴行为规格与约定，未复制其任何代码**；
+本仓库所有脚本均为 clean-room 独立实现，以保持 MIT 边界干净。

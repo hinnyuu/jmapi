@@ -1,0 +1,16 @@
+title = "jmapi gitleaks 配置"
+
+[extend]
+useDefault = true
+
+# v8.21.2 全局白名单为单数 [allowlist]（复数 [[allowlists]] 被忽略，实验实证）；
+# regexTarget 默认 match，curl-auth-header 的 match 窗口不含 key，须显式对 secret 匹配。
+[allowlist]
+description = "CI 冒烟固定测试 key 与文档占位符（非真实凭据）"
+regexTarget = "secret"
+regexes = [
+  '''jmapi-smoke-test-key''',
+  '''sk-REPLACE_ME''',
+  '''your-api-key''',
+  '''<你的 key>''',
+]

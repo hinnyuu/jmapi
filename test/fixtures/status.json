@@ -1,0 +1,9 @@
+{
+  "status": "logged_in",
+  "logged_in": true,
+  "expires_at": "2026-11-19T23:58:58+08:00",
+  "expires_in_seconds": 15564,
+  "expires_in": "4小时19分",
+  "renewal": "auto",
+  "hint": "expires_at 是访问凭据的到期时间，不是登录失效时间：到期前后执行任意命令都会用本机保存的刷新凭据自动续期，不用打开浏览器，长任务不必提前处理。只有续期失败（报「登录态已失效，请执行 login」）时，才要执行 jimeng-novel login，由人在浏览器里确认"
+}

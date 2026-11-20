@@ -1,0 +1,162 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: write
+  pull-requests: read
+
+jobs:
+  docs-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pyyaml
+      - name: 关系图谱门禁
+        env:
+          JMAPI_DOCS_NOCHANGE: ${{ contains(github.event.pull_request.labels.*.name, 'docs-nochange') }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: python3 scripts/docs-gate/gate.py --ci --base "$BASE_SHA"
+      - name: 门禁逻辑回归
+        run: python3 scripts/docs-gate/test_gate.py
+
+  commitlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: wagoid/commitlint-github-action@v6
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: gitleaks 密钥扫描（钉版 + checksums 校验后执行）
+        run: |
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz -o /tmp/gitleaks_8.21.2_linux_x64.tar.gz
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_checksums.txt -o /tmp/gitleaks_checksums.txt
+          grep -F 'gitleaks_8.21.2_linux_x64.tar.gz' /tmp/gitleaks_checksums.txt | (cd /tmp && sha256sum -c -)
+          tar -xzf /tmp/gitleaks_8.21.2_linux_x64.tar.gz -C /tmp gitleaks
+          /tmp/gitleaks detect --source . --redact --no-banner --exit-code 1 --config .gitleaks.toml
+
+  node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm audit --audit-level=high
+      - name: 依赖许可证白名单
+        run: node scripts/licenses.mjs
+
+  image:
+    runs-on: ubuntu-latest
+    needs: [docs-gate, commitlint, secrets, node]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=pr
+            type=sha,prefix=sha-
+      - uses: docker/build-push-action@v6
+        id: build
+        with:
+          context: .
+          file: Containerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: 基础镜像 digest 与 versions.lock 比对
+        env:
+          BASE_IMAGE: docker.io/library/node:22-slim
+        run: |
+          BASE_DIGEST=$(docker manifest inspect "$BASE_IMAGE" --verbose | jq -r 'if type=="array" then .[0].Descriptor.digest else .Descriptor.digest end')
+          LOCK=$(python3 -c "import json;print(json.load(open('versions.lock'))['baseDigest'])")
+          echo "base digest: $BASE_DIGEST (lock: ${LOCK:-empty})"
+          if [ -n "$LOCK" ] && [ "$LOCK" != "$BASE_DIGEST" ]; then
+            echo "基础镜像 digest 漂移：lock=$LOCK resolved=$BASE_DIGEST（升级须显式 commit 更新 versions.lock）"; exit 1
+          fi
+
+  smoke:
+    runs-on: ubuntu-latest
+    needs: [image]
+    steps:
+      - uses: actions/checkout@v4
+      - name: 安装 podman 并配置 rootless 环境
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y podman slirp4netns
+          # ubuntu 24.04 默认限制非特权 userns（AppArmor），放宽以允许 rootless podman（仅 CI 临时环境）
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 2>/dev/null || true
+          podman --version
+      - name: caddy 镜像 digest 与 versions.lock 比对
+        env:
+          CADDY_IMAGE: docker.io/library/caddy:2-alpine
+        run: |
+          CADDY_DIGEST=$(docker manifest inspect "$CADDY_IMAGE" --verbose | jq -r 'if type=="array" then .[0].Descriptor.digest else .Descriptor.digest end')
+          LOCK=$(python3 -c "import json;print(json.load(open('versions.lock'))['caddyDigest'])")
+          echo "caddy digest: $CADDY_DIGEST (lock: ${LOCK:-empty})"
+          if [ -n "$LOCK" ] && [ "$LOCK" != "$CADDY_DIGEST" ]; then
+            echo "caddy 镜像 digest 漂移：lock=$LOCK resolved=$CADDY_DIGEST"; exit 1
+          fi
+      - name: 容器冒烟测试（full 矩阵）
+        env:
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          JMAPI_SMOKE_MATRIX: full
+          JMAPI_SMOKE_CADDY_IMAGE: docker.io/library/caddy:2-alpine
+        run: |
+          case "$PR_NUMBER" in ''|*[!0-9]*) echo "invalid PR_NUMBER"; exit 1;; esac
+          bash scripts/acceptance/smoke.sh "ghcr.io/${REPO}:pr-${PR_NUMBER}"
+
+  # 项 3 WAN 暴露面：runner 为真外部视角；repo 变量 WAN_TARGET_IP 非空时才跑（验收期临时设置，测毕删除）
+  wan:
+    runs-on: ubuntu-latest
+    if: ${{ vars.WAN_TARGET_IP != '' }}
+    steps:
+      - name: WAN 六断言（外部视角）
+        env:
+          IP: ${{ vars.WAN_TARGET_IP }}
+          TLS_PORT: ${{ vars.WAN_TLS_PORT }}
+          DOMAIN: jmapi-wan.test
+        run: |
+          case "$IP" in ''|*[!0-9.]*) echo "invalid WAN_TARGET_IP"; exit 1;; esac
+          case "$TLS_PORT" in ''|*[!0-9]*) echo "invalid WAN_TLS_PORT"; exit 1;; esac
+          R="--resolve ${DOMAIN}:${TLS_PORT}:${IP}"
+          B="https://${DOMAIN}:${TLS_PORT}"
+          fail=0
+          check() { if [ "$2" = "$3" ]; then echo "PASS: $1 ($3)"; else echo "FAIL: $1 期望 $2 实得 $3"; fail=1; fi; }
+          check "TLS healthz 200" 200 "$(curl -sk $R -o /dev/null -w '%{http_code}' --max-time 10 "$B/healthz")"
+          check "admin 不经反代 404" 404 "$(curl -sk $R -o /dev/null -w '%{http_code}' --max-time 10 "$B/admin/status")"
+          check "无 key 401" 401 "$(curl -sk $R -o /dev/null -w '%{http_code}' --max-time 10 "$B/v1/models")"
+          check "有 key M0 未实现 501" 501 "$(curl -sk $R -H 'Authorization: Bearer jmapi-smoke-test-key' -o /dev/null -w '%{http_code}' --max-time 10 "$B/v1/models")"
+          check "明文业务端口 WAN 不可达" 000 "$(curl -s -o /dev/null -w '%{http_code}' --max-time 8 "http://${IP}:8080/healthz")"
+          check "明文 admin 端口 WAN 不可达" 000 "$(curl -s -o /dev/null -w '%{http_code}' --max-time 8 "http://${IP}:8081/admin/status")"
+          exit $fail

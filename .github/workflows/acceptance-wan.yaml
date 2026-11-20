@@ -1,0 +1,65 @@
+name: Acceptance-WAN
+
+# 项 3 WAN 暴露面验收：GitHub runner 为真外部视角（宿主自探是 hairpin，不可用于负例）。
+# 手动触发：宿主侧栈由 agent 起好、管理员临时放行 TLS 高位端口后执行。
+on:
+  workflow_dispatch:
+    inputs:
+      target_ip:
+        description: 宿主公网 IP
+        required: true
+        type: string
+      tls_port:
+        description: Caddy TLS 高位端口
+        required: false
+        default: '28443'
+        type: string
+      site_domain:
+        description: Caddy site 域名（不可解析假域名，--resolve 指向 target_ip）
+        required: false
+        default: 'jmapi-wan.test'
+        type: string
+      api_port:
+        description: 明文业务端口（期望 WAN 不可达）
+        required: false
+        default: '8080'
+        type: string
+      admin_port:
+        description: 明文 admin 端口（期望 WAN 不可达）
+        required: false
+        default: '8081'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  wan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: WAN 六断言（外部视角）
+        env:
+          IP: ${{ inputs.target_ip }}
+          TLS_PORT: ${{ inputs.tls_port }}
+          DOMAIN: ${{ inputs.site_domain }}
+          API_PORT: ${{ inputs.api_port }}
+          ADMIN_PORT: ${{ inputs.admin_port }}
+        run: |
+          case "$IP" in ''|*[!0-9.]*) echo "invalid target_ip"; exit 1;; esac
+          case "$DOMAIN" in ''|*[!a-zA-Z0-9.-]*) echo "invalid site_domain"; exit 1;; esac
+          for p in "$TLS_PORT" "$API_PORT" "$ADMIN_PORT"; do
+            case "$p" in ''|*[!0-9]*) echo "invalid port"; exit 1;; esac
+          done
+          R="--resolve ${DOMAIN}:${TLS_PORT}:${IP}"
+          B="https://${DOMAIN}:${TLS_PORT}"
+          fail=0
+          check() { # 标签 期望 实际
+            if [ "$2" = "$3" ]; then echo "PASS: $1 ($3)"; else echo "FAIL: $1 期望 $2 实得 $3"; fail=1; fi
+          }
+          check "TLS healthz 200" 200 "$(curl -sk $R -o /dev/null -w '%{http_code}' --max-time 10 "$B/healthz")"
+          check "admin 不经反代 404" 404 "$(curl -sk $R -o /dev/null -w '%{http_code}' --max-time 10 "$B/admin/status")"
+          check "无 key 401" 401 "$(curl -sk $R -o /dev/null -w '%{http_code}' --max-time 10 "$B/v1/models")"
+          check "有 key M0 未实现 501" 501 "$(curl -sk $R -H 'Authorization: Bearer jmapi-smoke-test-key' -o /dev/null -w '%{http_code}' --max-time 10 "$B/v1/models")"
+          check "明文业务端口 WAN 不可达" 000 "$(curl -s -o /dev/null -w '%{http_code}' --max-time 8 "http://${IP}:${API_PORT}/healthz")"
+          check "明文 admin 端口 WAN 不可达" 000 "$(curl -s -o /dev/null -w '%{http_code}' --max-time 8 "http://${IP}:${ADMIN_PORT}/admin/status")"
+          exit $fail

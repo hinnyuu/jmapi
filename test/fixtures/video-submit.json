@@ -1,0 +1,27 @@
+{
+  "context": {
+    "command": "generate-video",
+    "projectId": "90000000000001",
+    "teamId": "0"
+  },
+  "data": {
+    "initialization": {
+      "completed": true,
+      "run_id": "00000000-0000-4000-8000-0000000001",
+      "status": "succeeded",
+      "thread_id": "canvas_thread_93000000000001"
+    },
+    "key": "generate/1bb942cc-51b1-4d49-8976-89d528cf48b1",
+    "nodeId": "91000000000001",
+    "projectCreated": true,
+    "projectId": "90000000000001",
+    "run_id": "00000000-0000-4000-8000-0000000002",
+    "submissionStatus": "submitted",
+    "team_id": "0",
+    "thread_id": "canvas_thread_93000000000002",
+    "url": "https://jimeng.jianying.com/novel/detail/canvas?projectId=90000000000001"
+  },
+  "error": null,
+  "next": "jimeng-novel query-result --thread-id canvas_thread_93000000000002 --run-id 00000000-0000-4000-8000-0000000002 --wait 60 --team-id 0",
+  "status": "success"
+}

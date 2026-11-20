@@ -1,0 +1,22 @@
+{
+  "context": {
+    "command": "model describe",
+    "projectId": null,
+    "teamId": null
+  },
+  "data": null,
+  "error": {
+    "code": "INVALID_ARGUMENT",
+    "details": {
+      "validFlags": [
+        "model-id",
+        "team-id"
+      ]
+    },
+    "hint": "你是不是想用 --model-id；合法参数: --model-id --team-id",
+    "message": "unknown flag --model for model describe",
+    "retryable": false,
+    "submitted": null
+  },
+  "status": "error"
+}
