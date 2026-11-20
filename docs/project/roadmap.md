@@ -26,7 +26,7 @@ seed_audio 音乐/音效扩展端点；`/v1/script/outline|episode`（结构化�
 admin LAN-only：login 非交互发起/续等/status、cli refresh、config reload。
 出口：双一等公民面契约测试 + dashscope 风格 curl 实测。
 
-## M3 部署加固与公网形态（进行中）
+## M3 部署加固与公网形态（完成；项 6 SKIP deferred 用户批准，真实部署时补测）
 
 Quadlet 单元（双栈两条 PublishPort）+ run.sh 双轨；Caddyfile.example（只反代 /v1 与 /api，
 admin 不出公网）；公网默认值全量负例测试（签名 URL 过期/错 key/限流/积分帽）；

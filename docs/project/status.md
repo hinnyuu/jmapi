@@ -19,7 +19,8 @@
 
 ## in-flight
 
-- M3 PR + CI + smoke；残留项 6 待用户决策（域名+80/443 或 SKIP deferred）。
+- M3 sign-off 代录 + squash merge PR #4 + release 重冒烟；**项 6 SKIP(deferred) 用户批准**（history 2010）。
+- merge 后项目进入维护态：roadmap M0-M3 全闭环。
 
 ## 下一动作
 
