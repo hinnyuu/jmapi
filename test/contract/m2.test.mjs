@@ -40,7 +40,7 @@ function fakeExec({ mode = 'ok' } = {}) {
     if (cmd === 'generate-video') return rewrite(read('video-submit.json'));
     if (cmd === 'generate-audio') return rewrite(read('tts-result.json'));
     if (cmd === 'script') {
-      if (mode === 'script-running' && sub !== 'result') {
+      if ((mode === 'script-running' || mode === 'script-writefail') && sub !== 'result') {
         return { status: 'success', data: { thread_id: 't-s', run_id: 'r-s', completed: false } };
       }
       if (mode === 'script-writefail' && sub === 'result') {
